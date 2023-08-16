@@ -12,7 +12,6 @@
             "program": "${file}",
             "console": "integratedTerminal",
             "justMyCode": true,
-            "cwd": "${fileDirname}"  // This line ensures the current working directory is where the .py file resides.
         }
     ]
 }
