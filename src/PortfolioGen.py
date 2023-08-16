@@ -60,7 +60,14 @@ class Test:
         
 def readTests(fileName):
     tests = []
-    with open("../tests/" + fileName) as f:
+    
+    # Get the directory of the currently executing script
+    current_directory = os.path.dirname(os.path.abspath(__file__))
+
+    # Build the path to your file
+    path_to_file = os.path.join(current_directory, '../tests', fileName)
+ 
+    with open(path_to_file) as f:
         for line in f:
             tokens = line.split("\t")
             if tokens and '#' not in tokens[0]:
@@ -83,11 +90,16 @@ class Inputs:
         self.resources = resources
 
 
-
 def readInputs(instanceName):
-    # Read tasks and resources into DataFrames
-    tasks_df = pd.read_excel("../inputs/" + instanceName + ".xlsx", sheet_name="Tasks", dtype={"ID" : str, "Predecessors" : str, "Successors" : str}, na_filter=False)
-    resources_df = pd.read_excel("../inputs/" + instanceName + ".xlsx", sheet_name="Resources")
+    # Get the directory of the currently executing script
+    current_directory = os.path.dirname(os.path.abspath(__file__))
+
+    # Build the path to your input file
+    path_to_file = os.path.join(current_directory, '../inputs', instanceName + ".xlsx")
+    
+    # Read tasks and resources into DataFrames using the adjusted path
+    tasks_df = pd.read_excel(path_to_file, sheet_name="Tasks", dtype={"ID" : str, "Predecessors" : str, "Successors" : str}, na_filter=False)
+    resources_df = pd.read_excel(path_to_file, sheet_name="Resources")
     
     # Create list of task objects
     tasks = []
@@ -149,7 +161,12 @@ def readInputs(instanceName):
 # In[3]:
 
 
-OUTPUTS_DIR = "../outputs"  # Define the output directory
+# Get the directory of the currently executing script
+current_directory = os.path.dirname(os.path.abspath(__file__))
+
+# Adjust the OUTPUTS_DIR to be an absolute path
+OUTPUTS_DIR = os.path.join(current_directory, '../outputs')
+
 
 def get_predecessor_notation(task_label, extra_time):
     if extra_time == 0:
