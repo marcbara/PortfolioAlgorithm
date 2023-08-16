@@ -18,8 +18,6 @@ OUTPUTS_DIR = os.path.join(current_directory, config['PATHS']['OUTPUTS_DIR'])
 INPUTS_DIR = os.path.join(current_directory, config['PATHS']['INPUTS_DIR'])
 TESTS_DIR = os.path.join(current_directory, config['PATHS']['TESTS_DIR'])
 
-print(TESTS_DIR)
-
 # Constants
 TASKS_SHEET_NAME = "Tasks"
 RESOURCES_SHEET_NAME = "Resources"
