@@ -30,13 +30,15 @@ def readTests(fileName):
 
 
 def readInputs(instanceName):
-
     path_to_file = os.path.join(INPUTS_DIR, instanceName + ".xlsx")
     
     # Read tasks and resources into DataFrames using the adjusted path
-    tasks_df = pd.read_excel(path_to_file, sheet_name="Tasks", dtype={"ID" : str, "Predecessors" : str, "Successors" : str}, na_filter=False)
+    tasks_df = pd.read_excel(path_to_file, sheet_name="Tasks", dtype={"ID": str, "Predecessors": str, "Successors": str}, na_filter=False)
     resources_df = pd.read_excel(path_to_file, sheet_name="Resources")
     
+    # Create a dictionary to map task labels to their index
+    task_label_to_index = {label: idx for idx, label in enumerate(tasks_df["ID"])}
+
     # Create list of task objects
     tasks = []
     for i, row in tasks_df.iterrows():
@@ -50,14 +52,14 @@ def readInputs(instanceName):
                 cc_index = pred.find("CC")
                 if fc_index != -1:
                     label = pred[:fc_index]
-                    pred_id = tasks_df.loc[tasks_df["ID"] == label].index[0]
+                    pred_id = task_label_to_index[label]
                     predecessors[pred_id] = int(pred[fc_index + 3:])
                 elif cc_index != -1:
                     label = pred[:cc_index]
-                    pred_id = tasks_df.loc[tasks_df["ID"] == label].index[0]
+                    pred_id = task_label_to_index[label]
                     predecessors[pred_id] = -int(pred[cc_index + 3:])
                 else:
-                    pred_id = tasks_df.loc[tasks_df["ID"] == pred].index[0]
+                    pred_id = task_label_to_index[pred]
                     predecessors[pred_id] = 0
 
         for succ in row['Successors'].split(";"):
@@ -66,22 +68,38 @@ def readInputs(instanceName):
                 cc_index = succ.find("CC")
                 if fc_index != -1:
                     label = succ[:fc_index]
-                    succ_id = tasks_df.loc[tasks_df["ID"] == label].index[0]
+                    succ_id = task_label_to_index[label]
                     successors[succ_id] = int(succ[fc_index + 3:])
                 elif cc_index != -1:
                     label = succ[:cc_index]
-                    succ_id = tasks_df.loc[tasks_df["ID"] == label].index[0]
+                    succ_id = task_label_to_index[label]
                     successors[succ_id] = -int(succ[cc_index + 3:])
                 else:
-                    succ_id = tasks_df.loc[tasks_df["ID"] == succ].index[0]
+                    succ_id = task_label_to_index[succ]
                     successors[succ_id] = 0
 
-        for j, res in enumerate(row[6 : len(tasks_df.columns)]):
+        for j, res in enumerate(row[6: len(tasks_df.columns)]):
             if res:
                 resources[j] = float(res)
 
         task = Task(i, row['ID'], row['Name'], row['Duration'], predecessors, successors, resources)
         tasks.append(task)
+
+    # Create list of resource objects
+    resources = []
+    for i, row in resources_df.iterrows():
+        resource = Resource(i, row['ID'], row['Name'], row['Type'], row['Units'])
+        resources.append(resource)
+
+    # Check if any task demands more units of a resource than its total capacity
+    resources_availability = {resource.id: resource.units for resource in resources}
+    for task in tasks:
+        for resource_id, units in task.resources.items():
+            if units > resources_availability[resource_id]:
+                raise ValueError(f"Task {task.label} demands {units} units of resource {resource_id}, but only {resources_availability[resource_id]} units are available.")
+
+    inputs = Inputs(instanceName, len(tasks), len(resources), tasks, resources)
+    return inputs
 
 
     # Create list of resource objects
