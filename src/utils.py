@@ -1,14 +1,24 @@
 import pandas as pd
 import sys, os
+import configparser
 from classes import Task, Resource, Inputs, Test, Solution
 
 # Get the directory of the currently executing script
 current_directory = os.path.dirname(os.path.abspath(__file__))
 
-# Adjust the OUTPUTS_DIR to be an absolute path
-OUTPUTS_DIR = os.path.join(current_directory, '../outputs')
-INPUTS_DIR = os.path.join(current_directory, '../inputs')
-TESTS_DIR = os.path.join(current_directory, '../tests')
+# Construct the absolute path to config.ini
+config_file_path = os.path.join(current_directory, 'config.ini')
+config = configparser.ConfigParser()
+read_files = config.read(config_file_path)
+if not read_files:
+    print("Failed to read the config.ini file.")
+
+# Adjust directory paths to be absolute paths relative to the current_directory
+OUTPUTS_DIR = os.path.join(current_directory, config['PATHS']['OUTPUTS_DIR'])
+INPUTS_DIR = os.path.join(current_directory, config['PATHS']['INPUTS_DIR'])
+TESTS_DIR = os.path.join(current_directory, config['PATHS']['TESTS_DIR'])
+
+print(TESTS_DIR)
 
 # Constants
 TASKS_SHEET_NAME = "Tasks"
