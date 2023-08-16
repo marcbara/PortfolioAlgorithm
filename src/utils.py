@@ -27,6 +27,9 @@ def readTests(fileName):
     tests = []
     path_to_file = os.path.join(TESTS_DIR, fileName)
  
+    if not os.path.exists(path_to_file):
+        raise FileNotFoundError(f"The file {path_to_file} does not exist.")
+    
     with open(path_to_file) as f:
         for line in f:
             tokens = line.split("\t")
@@ -40,12 +43,23 @@ def readTests(fileName):
     return tests
 
 
+
 def readInputs(instanceName):
     path_to_file = os.path.join(INPUTS_DIR, instanceName + ".xlsx")
     
     # Read tasks and resources into DataFrames using the adjusted path
     tasks_df = pd.read_excel(path_to_file, sheet_name=TASKS_SHEET_NAME, dtype={"ID": str, "Predecessors": str, "Successors": str}, na_filter=False)
     resources_df = pd.read_excel(path_to_file, sheet_name=RESOURCES_SHEET_NAME)
+
+    required_task_columns = ['ID', 'Name', 'Duration', 'Predecessors', 'Successors']
+    for column in required_task_columns:
+        if column not in tasks_df.columns:
+            raise ValueError(f"Expected column '{column}' not found in the tasks data.")
+
+    required_resource_columns = ['ID', 'Name', 'Type', 'Units']
+    for column in required_resource_columns:
+        if column not in resources_df.columns:
+            raise ValueError(f"Expected column '{column}' not found in the resources data.")
     
     # Create a dictionary to map task labels to their index
     task_label_to_index = {label: idx for idx, label in enumerate(tasks_df["ID"])}
@@ -131,6 +145,11 @@ def get_predecessor_notation(task_label, extra_time):
     else:
         return f"{task_label}FC-{extra_time}"
 
+
+
+
+
+
 def printSolutionToExcel(inputs, solution, project_name):
     # Create a DataFrame to store the solution tasks
     data = {
@@ -162,7 +181,10 @@ def printSolutionToExcel(inputs, solution, project_name):
 
 
     # Write the DataFrame to an Excel file in the output directory
-    df.to_excel(output_file_path, sheet_name="Solution", index=False)
+    try:
+        df.to_excel(output_file_path, sheet_name="Solution", index=False)
+    except Exception as e:
+        print(f"Error writing to Excel file: {e}")
 
     # Append cost and time to the Excel file as additional information
     with pd.ExcelWriter(output_file_path, engine='openpyxl', mode='a') as writer:
