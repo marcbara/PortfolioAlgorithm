@@ -10,6 +10,9 @@ OUTPUTS_DIR = os.path.join(current_directory, '../outputs')
 INPUTS_DIR = os.path.join(current_directory, '../inputs')
 TESTS_DIR = os.path.join(current_directory, '../tests')
 
+# Constants
+TASKS_SHEET_NAME = "Tasks"
+RESOURCES_SHEET_NAME = "Resources"
 
      
 def readTests(fileName):
@@ -33,8 +36,8 @@ def readInputs(instanceName):
     path_to_file = os.path.join(INPUTS_DIR, instanceName + ".xlsx")
     
     # Read tasks and resources into DataFrames using the adjusted path
-    tasks_df = pd.read_excel(path_to_file, sheet_name="Tasks", dtype={"ID": str, "Predecessors": str, "Successors": str}, na_filter=False)
-    resources_df = pd.read_excel(path_to_file, sheet_name="Resources")
+    tasks_df = pd.read_excel(path_to_file, sheet_name=TASKS_SHEET_NAME, dtype={"ID": str, "Predecessors": str, "Successors": str}, na_filter=False)
+    resources_df = pd.read_excel(path_to_file, sheet_name=RESOURCES_SHEET_NAME)
     
     # Create a dictionary to map task labels to their index
     task_label_to_index = {label: idx for idx, label in enumerate(tasks_df["ID"])}
