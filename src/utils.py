@@ -1,6 +1,6 @@
 import pandas as pd
 import sys, os
-from classes import Task, Resource, Inputs
+from classes import Task, Resource, Inputs, Test, Solution
 
 # Get the directory of the currently executing script
 current_directory = os.path.dirname(os.path.abspath(__file__))
@@ -102,7 +102,7 @@ def get_predecessor_notation(task_label, extra_time):
     else:
         return f"{task_label}FC-{extra_time}"
 
-def printSolutionToExcel(solution, project_name):
+def printSolutionToExcel(inputs, solution, project_name):
     # Create a DataFrame to store the solution tasks
     data = {
         "Task Label": [task.label for task in solution.tasks],
@@ -158,7 +158,7 @@ def topological_sort(tasks):
             in_degree[successor_id] -= 1
             # If the successor has no more incoming edges, add it to the queue
             if in_degree[successor_id] == 0:
-                successor = inputs.tasks[successor_id]
+                successor = tasks[successor_id]
                 queue.append(successor)
     return sorted_tasks
 
