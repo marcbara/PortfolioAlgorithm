@@ -1,7 +1,14 @@
-#!/usr/bin/env python
-# coding: utf-8
+import pandas as pd
+import sys, os
 
-# In[1]:
+
+# Get the directory of the currently executing script
+current_directory = os.path.dirname(os.path.abspath(__file__))
+
+# Adjust the OUTPUTS_DIR to be an absolute path
+OUTPUTS_DIR = os.path.join(current_directory, '../outputs')
+INPUTS_DIR = os.path.join(current_directory, '../inputs')
+TESTS_DIR = os.path.join(current_directory, '../tests')
 
 
 class Task:
@@ -44,12 +51,6 @@ class Solution:
         #self.cost = 0
         self.time = 0
 
-
-# In[2]:
-
-
-import pandas as pd
-
 class Test:
     def __init__(self, instanceName, startDate, deadline, dailyPenalty):
         self.instanceName = instanceName
@@ -60,12 +61,8 @@ class Test:
         
 def readTests(fileName):
     tests = []
-    
-    # Get the directory of the currently executing script
-    current_directory = os.path.dirname(os.path.abspath(__file__))
 
-    # Build the path to your file
-    path_to_file = os.path.join(current_directory, '../tests', fileName)
+    path_to_file = os.path.join(TESTS_DIR, fileName)
  
     with open(path_to_file) as f:
         for line in f:
@@ -91,11 +88,8 @@ class Inputs:
 
 
 def readInputs(instanceName):
-    # Get the directory of the currently executing script
-    current_directory = os.path.dirname(os.path.abspath(__file__))
 
-    # Build the path to your input file
-    path_to_file = os.path.join(current_directory, '../inputs', instanceName + ".xlsx")
+    path_to_file = os.path.join(INPUTS_DIR, instanceName + ".xlsx")
     
     # Read tasks and resources into DataFrames using the adjusted path
     tasks_df = pd.read_excel(path_to_file, sheet_name="Tasks", dtype={"ID" : str, "Predecessors" : str, "Successors" : str}, na_filter=False)
@@ -156,16 +150,6 @@ def readInputs(instanceName):
 
     inputs = Inputs(instanceName, len(tasks), len(resources), tasks, resources)
     return inputs
-
-
-# In[3]:
-
-
-# Get the directory of the currently executing script
-current_directory = os.path.dirname(os.path.abspath(__file__))
-
-# Adjust the OUTPUTS_DIR to be an absolute path
-OUTPUTS_DIR = os.path.join(current_directory, '../outputs')
 
 
 def get_predecessor_notation(task_label, extra_time):
@@ -357,11 +341,6 @@ def TORA_Heuristic(inputs):
 
 
 
-# In[6]:
-
-
-import sys, os
-
 """
 Network diagram generator
 """
@@ -397,8 +376,6 @@ def network_diagram(inputs):
     return solution
 
 
-# In[7]:
-
 
 if __name__ == "__main__":
     # Read tests from the file
@@ -415,9 +392,6 @@ if __name__ == "__main__":
         # Calculate solution only as a network diagram
         solution_nd = network_diagram(inputs)
         printSolutionToExcel(solution_nd, test.instanceName + "_notConstrained")
-
-
-# In[ ]:
 
 
 
