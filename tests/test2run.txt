@@ -1,0 +1,4 @@
+# instanceName	StartDate	Deadline	DailyPenalty(k€)
+Project1	01-01-2023	01-01-2028	1
+Project2	01-01-2023	01-01-2028	2
+Project3	01-01-2023	01-01-2028	0
