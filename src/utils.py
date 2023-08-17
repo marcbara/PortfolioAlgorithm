@@ -276,8 +276,7 @@ def network_diagram(inputs):
     # graph and returns a linear ordering of its vertices (nodes) such that, for every
     # directed edge (u, v) from vertex u to vertex v, u comes before v in the ordering
     sorted_tasks = topological_sort(inputs.tasks)
-    print(sorted_tasks)
-    
+
     # Loop over the tasks in topological order
     for task in sorted_tasks:
         # Calculate earliest start time for task considering predecessor dependencies
