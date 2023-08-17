@@ -7,11 +7,16 @@ from classes import Task, Resource, Inputs, Test, Solution
 current_directory = os.path.dirname(os.path.abspath(__file__))
 
 # Construct the absolute path to config.ini
+class CaseSensitiveConfigParser(configparser.ConfigParser):
+    def optionxform(self, optionstr):
+        return optionstr
 config_file_path = os.path.join(current_directory, 'config.ini')
-config = configparser.ConfigParser()
+config = CaseSensitiveConfigParser()
 read_files = config.read(config_file_path)
 if not read_files:
     print("Failed to read the config.ini file.")
+#print(list(config['TESTS'].keys()))
+
 
 # Adjust directory paths to be absolute paths relative to the current_directory
 OUTPUTS_DIR = os.path.join(current_directory, config['PATHS']['OUTPUTS_DIR'])
@@ -29,10 +34,10 @@ def readTests():
     for test_name, test_values in config['TESTS'].items():
         start_date, deadline, daily_penalty = test_values.split(',')
         test = Test(test_name, start_date, deadline, float(daily_penalty))
+        #print(f"Test object created with instanceName: {test.instanceName}")
         tests.append(test)
     
     return tests
-
 
 def readInputs(instanceName):
     # Reading resources from the RESOURCES_SHEET_NAME
@@ -41,18 +46,11 @@ def readInputs(instanceName):
     # Reading tasks from a sheet specific to the project (based on the instanceName)
     tasks_df = pd.read_excel(os.path.join(INPUTS_DIR, PORTFOLIO_FILE), sheet_name=instanceName, dtype={"ID": str, "Predecessors": str, "Successors": str}, na_filter=False)
 
-    required_task_columns = ['ID', 'Name', 'Duration', 'Predecessors', 'Successors']
-    for column in required_task_columns:
-        if column not in tasks_df.columns:
-            raise ValueError(f"Expected column '{column}' not found in the tasks data.")
-
-    required_resource_columns = ['ID', 'Name', 'Type', 'Units']
-    for column in required_resource_columns:
-        if column not in resources_df.columns:
-            raise ValueError(f"Expected column '{column}' not found in the resources data.")
-    
     # Create a dictionary to map task labels to their index
     task_label_to_index = {label: idx for idx, label in enumerate(tasks_df["ID"])}
+    
+    # Create a dictionary to map resource labels to their index
+    resource_label_to_index = {row['ID']: i for i, row in resources_df.iterrows()}
 
     # Create list of task objects
     tasks = []
@@ -92,10 +90,15 @@ def readInputs(instanceName):
                 else:
                     succ_id = task_label_to_index[succ]
                     successors[succ_id] = 0
-
-        for j, res in enumerate(row[6: len(tasks_df.columns)]):
-            if res:
-                resources[j] = float(res)
+        
+        # Adjusting how resources are assigned to tasks
+        for j, (col_name, res) in enumerate(row.items()):
+            if j >= 6 and res:
+                try:
+                    resource_id = resource_label_to_index[col_name]
+                    resources[resource_id] = float(res)
+                except ValueError:
+                    raise ValueError(f"Invalid resource value '{res}' for task {row['ID']} in resource column {col_name}. Expected a numeric value.")
 
         task = Task(i, row['ID'], row['Name'], row['Duration'], predecessors, successors, resources)
         tasks.append(task)
@@ -111,7 +114,8 @@ def readInputs(instanceName):
     for task in tasks:
         for resource_id, units in task.resources.items():
             if units > resources_availability[resource_id]:
-                raise ValueError(f"Task {task.label} demands {units} units of resource {resource_id}, but only {resources_availability[resource_id]} units are available.")
+                resource_label = resources_list[resource_id].name   # Fetching the name attribute from the Resource object
+                raise ValueError(f"Project {instanceName} - Task {task.label} {task.name} demands {units} units of resource {resource_label}, but only {resources_availability[resource_id]} units are available.")
 
     inputs = Inputs(instanceName, len(tasks), len(resources_list), tasks, resources_list)
     return inputs
