@@ -1,3 +1,19 @@
+class Project:
+    """
+    Represents a project instance with its associated properties.
+    
+    Attributes:
+        instanceName (str): Name of the project instance.
+        startDate (str): Start date for the project.
+        deadline (str): Deadline for the project.
+        dailyPenalty (str): Daily penalty for exceeding the deadline.
+    """
+    def __init__(self, instanceName, startDate, deadline, dailyPenalty):
+        self.instanceName = instanceName
+        self.startDate = startDate
+        self.deadline = deadline
+        self.dailyPenalty = dailyPenalty
+
 class Task:
     """
     Represents a task in a project with its associated properties.
@@ -70,22 +86,7 @@ class Solution:
         #self.cost = 0
         self.time = 0
 
-class Test:
-    """
-    Represents a test instance with its associated properties.
-    
-    Attributes:
-        instanceName (str): Name of the test instance.
-        startDate (str): Start date for the test.
-        deadline (str): Deadline for the test.
-        dailyPenalty (str): Daily penalty for exceeding the deadline.
-    """
-    def __init__(self, instanceName, startDate, deadline, dailyPenalty):
-        self.instanceName = instanceName
-        self.startDate = startDate
-        self.deadline = deadline
-        self.dailyPenalty = dailyPenalty
-        
+  
 
 
 class Inputs:

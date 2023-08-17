@@ -1,7 +1,7 @@
 import pandas as pd
 import sys, os
 import configparser
-from classes import Task, Resource, Inputs, Test, Solution
+from classes import Task, Resource, Inputs, Project, Solution
 
 # Get the directory of the currently executing script
 current_directory = os.path.dirname(os.path.abspath(__file__))
@@ -15,29 +15,26 @@ config = CaseSensitiveConfigParser()
 read_files = config.read(config_file_path)
 if not read_files:
     print("Failed to read the config.ini file.")
-#print(list(config['TESTS'].keys()))
 
 
 # Adjust directory paths to be absolute paths relative to the current_directory
 OUTPUTS_DIR = os.path.join(current_directory, config['PATHS']['OUTPUTS_DIR'])
 INPUTS_DIR = os.path.join(current_directory, config['PATHS']['INPUTS_DIR'])
-TESTS_DIR = os.path.join(current_directory, config['PATHS']['TESTS_DIR'])
 
 # Constants
 RESOURCES_SHEET_NAME = "Resources"
 PORTFOLIO_FILE = config['PATHS']['PORTFOLIO_FILE']
      
-def readTests():
-    tests = []
+def readProjects():
+    projects = []
     
-    # Reading tests from the [TESTS] section of the config.ini file
-    for test_name, test_values in config['TESTS'].items():
-        start_date, deadline, daily_penalty = test_values.split(',')
-        test = Test(test_name, start_date, deadline, float(daily_penalty))
-        #print(f"Test object created with instanceName: {test.instanceName}")
-        tests.append(test)
+    # Reading projects from the [PROJECTS] section of the config.ini file
+    for project_name, project_values in config['PROJECTS'].items():
+        start_date, deadline, daily_penalty = project_values.split(',')
+        project = Project(project_name, start_date, deadline, float(daily_penalty))
+        projects.append(project)
     
-    return tests
+    return projects
 
 def readInputs(instanceName):
     # Reading resources from the RESOURCES_SHEET_NAME
@@ -121,17 +118,17 @@ def readInputs(instanceName):
     return inputs
 
 
-def run_test(test_instance_name):
-    # Read inputs for the test
-    inputs = readInputs(test_instance_name)
+# def run_project(project_instance_name):
+#     # Read inputs for the test
+#     inputs = readInputs(project_instance_name)
 
-    # Calculate solution for the given scenario
-    solution_df_constrained = TORA_Heuristic(inputs)
+#     # Calculate solution for the given scenario
+#     solution_df_constrained = TORA_Heuristic(inputs)
     
-    # Calculate solution only as a network diagram
-    solution_nd = network_diagram(inputs)
+#     # Calculate solution only as a network diagram
+#     solution_nd = network_diagram(inputs)
     
-    return solution_df_constrained, solution_nd
+#     return solution_df_constrained, solution_nd
 
 def SolutionToDF(inputs, solution):
     # Create a DataFrame to store the solution tasks
