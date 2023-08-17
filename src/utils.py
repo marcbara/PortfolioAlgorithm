@@ -20,7 +20,7 @@ TESTS_DIR = os.path.join(current_directory, config['PATHS']['TESTS_DIR'])
 
 # Constants
 RESOURCES_SHEET_NAME = "Resources"
-
+PORTFOLIO_FILE = config['PATHS']['PORTFOLIO_FILE']
      
 def readTests():
     tests = []
@@ -34,14 +34,12 @@ def readTests():
     return tests
 
 
-
-
 def readInputs(instanceName):
     # Reading resources from the RESOURCES_SHEET_NAME
-    resources_df = pd.read_excel(os.path.join(INPUTS_DIR, config['PORTFOLIO_FILE']), sheet_name=RESOURCES_SHEET_NAME)
+    resources_df = pd.read_excel(os.path.join(INPUTS_DIR, PORTFOLIO_FILE), sheet_name=RESOURCES_SHEET_NAME)
 
     # Reading tasks from a sheet specific to the project (based on the instanceName)
-    tasks_df = pd.read_excel(os.path.join(INPUTS_DIR, config['PORTFOLIO_FILE']), sheet_name=instanceName, dtype={"ID": str, "Predecessors": str, "Successors": str}, na_filter=False)
+    tasks_df = pd.read_excel(os.path.join(INPUTS_DIR, PORTFOLIO_FILE), sheet_name=instanceName, dtype={"ID": str, "Predecessors": str, "Successors": str}, na_filter=False)
 
     required_task_columns = ['ID', 'Name', 'Duration', 'Predecessors', 'Successors']
     for column in required_task_columns:
