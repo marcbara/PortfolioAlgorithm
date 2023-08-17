@@ -19,7 +19,6 @@ INPUTS_DIR = os.path.join(current_directory, config['PATHS']['INPUTS_DIR'])
 TESTS_DIR = os.path.join(current_directory, config['PATHS']['TESTS_DIR'])
 
 # Constants
-TASKS_SHEET_NAME = "Tasks"
 RESOURCES_SHEET_NAME = "Resources"
 
      
@@ -36,12 +35,13 @@ def readTests():
 
 
 
+
 def readInputs(instanceName):
-    path_to_file = os.path.join(INPUTS_DIR, instanceName + ".xlsx")
-    
-    # Read tasks and resources into DataFrames using the adjusted path
-    tasks_df = pd.read_excel(path_to_file, sheet_name=TASKS_SHEET_NAME, dtype={"ID": str, "Predecessors": str, "Successors": str}, na_filter=False)
-    resources_df = pd.read_excel(path_to_file, sheet_name=RESOURCES_SHEET_NAME)
+    # Reading resources from the RESOURCES_SHEET_NAME
+    resources_df = pd.read_excel(os.path.join(INPUTS_DIR, config['PORTFOLIO_FILE']), sheet_name=RESOURCES_SHEET_NAME)
+
+    # Reading tasks from a sheet specific to the project (based on the instanceName)
+    tasks_df = pd.read_excel(os.path.join(INPUTS_DIR, config['PORTFOLIO_FILE']), sheet_name=instanceName, dtype={"ID": str, "Predecessors": str, "Successors": str}, na_filter=False)
 
     required_task_columns = ['ID', 'Name', 'Duration', 'Predecessors', 'Successors']
     for column in required_task_columns:
@@ -103,29 +103,19 @@ def readInputs(instanceName):
         tasks.append(task)
 
     # Create list of resource objects
-    resources = []
+    resources_list = []
     for i, row in resources_df.iterrows():
         resource = Resource(i, row['ID'], row['Name'], row['Type'], row['Units'])
-        resources.append(resource)
+        resources_list.append(resource)
 
     # Check if any task demands more units of a resource than its total capacity
-    resources_availability = {resource.id: resource.units for resource in resources}
+    resources_availability = {resource.id: resource.units for resource in resources_list}
     for task in tasks:
         for resource_id, units in task.resources.items():
             if units > resources_availability[resource_id]:
                 raise ValueError(f"Task {task.label} demands {units} units of resource {resource_id}, but only {resources_availability[resource_id]} units are available.")
 
-    inputs = Inputs(instanceName, len(tasks), len(resources), tasks, resources)
-    return inputs
-
-
-    # Create list of resource objects
-    resources = []
-    for i, row in resources_df.iterrows():
-        resource = Resource(i, row['ID'], row['Name'], row['Type'], row['Units'])
-        resources.append(resource)
-
-    inputs = Inputs(instanceName, len(tasks), len(resources), tasks, resources)
+    inputs = Inputs(instanceName, len(tasks), len(resources_list), tasks, resources_list)
     return inputs
 
 
@@ -136,10 +126,6 @@ def get_predecessor_notation(task_label, extra_time):
         return f"{task_label}FC+{extra_time}"
     else:
         return f"{task_label}FC-{extra_time}"
-
-
-
-
 
 
 def printSolutionToExcel(inputs, solution, project_name):

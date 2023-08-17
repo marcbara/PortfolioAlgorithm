@@ -2,7 +2,7 @@ from utils import readTests, readInputs, TORA_Heuristic, printSolutionToExcel, n
 from classes import Test
 
 def main():
-    # Read tests from the config.ini file
+    # Read tests from the file
     tests = readTests()
 
     for test in tests:
