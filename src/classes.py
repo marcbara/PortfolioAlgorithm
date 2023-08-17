@@ -1,22 +1,29 @@
 class Project:
     """
-    Represents a project instance with its associated properties.
+    Represents a project instance with its associated properties, tasks, and resources.
     
     Attributes:
         instanceName (str): Name of the project instance.
         startDate (str): Start date for the project.
         deadline (str): Deadline for the project.
         dailyPenalty (str): Daily penalty for exceeding the deadline.
+        start_offset (int): Number of labor days from the earliest project start date.
+        tasks (list): List of tasks associated with the project.
+        resources (list): List of resources available for the project.
     """
-    def __init__(self, instanceName, startDate, deadline, dailyPenalty):
+    def __init__(self, instanceName, startDate, deadline, dailyPenalty, start_offset=0):
         self.instanceName = instanceName
         self.startDate = startDate
         self.deadline = deadline
         self.dailyPenalty = dailyPenalty
+        self.start_offset = start_offset
+        self.tasks = []
+        self.resources = []
 
     def __repr__(self):
         return (f"Project({self.instanceName!r}, Start: {self.startDate}, "
-                f"Deadline: {self.deadline}, Daily Penalty: {self.dailyPenalty})\n")
+                f"Deadline: {self.deadline}, Daily Penalty: {self.dailyPenalty}, "
+                f"Start Offset: {self.start_offset} labor days)\n")
 
 
 class Task:
@@ -94,21 +101,25 @@ class Solution:
         self.tasks = []
         self.time = 0
 
-  
-class Inputs:
-    """
-    Represents the inputs for a given instance.
-    
-    Attributes:
-        name (str): Name of the Project instance.
-        nTasks (int): Number of tasks in the instance.
-        nResources (int): Number of resources in the instance.
-        tasks (list): A list of task objects for the instance.
-        resources (list): A list of resource objects for the instance.
-    """
-    def __init__(self, name, nTasks, nResources, tasks, resources):
-        self.name = name
-        self.nTasks = nTasks
-        self.nResources = nResources
-        self.tasks = tasks
-        self.resources = resources
+    def to_project(self, original_project):
+        # Generate tasks from the solution's tasks
+        solved_tasks = [Task(task.id, task.label, task.name, task.duration, task.predecessors, 
+                             task.successors, task.resources, task.project) 
+                        for task in self.tasks]
+        
+        # Set start and finish times based on the solution
+        for task, solved_task in zip(original_project.tasks, solved_tasks):
+            solved_task.start_time = task.start_time
+            solved_task.finish_time = task.finish_time
+
+        # Create a new project instance with the same attributes as the original
+        solved_project = Project(original_project.instanceName, original_project.startDate, 
+                                 original_project.deadline, original_project.dailyPenalty, 
+                                 original_project.start_offset)
+        
+        # Assign the new list of tasks to the project
+        solved_project.tasks = solved_tasks
+        # Copy the resources from the original project to the solved project
+        solved_project.resources = original_project.resources.copy()
+
+        return solved_project

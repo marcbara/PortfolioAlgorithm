@@ -1,7 +1,8 @@
 import pandas as pd
 import sys, os
 import configparser
-from classes import Task, Resource, Inputs, Project, Solution
+from classes import Task, Resource, Project, Solution
+from datetime import datetime, timedelta
 
 # Get the directory of the currently executing script
 current_directory = os.path.dirname(os.path.abspath(__file__))
@@ -24,17 +25,55 @@ INPUTS_DIR = os.path.join(current_directory, config['PATHS']['INPUTS_DIR'])
 # Constants
 RESOURCES_SHEET_NAME = "Resources"
 PORTFOLIO_FILE = config['PATHS']['PORTFOLIO_FILE']
-     
+
+def get_earliest_date(dates):
+    date_format = "%d-%m-%Y"
+    parsed_dates = [datetime.strptime(date, date_format) for date in dates]
+    return min(parsed_dates)
+
+def get_labor_days_difference(start_date, end_date):
+    current_date = start_date
+    labor_days = 0
+    while current_date < end_date:
+        if current_date.weekday() < 5:  # 0-4 denotes Monday to Friday
+            labor_days += 1
+        current_date += timedelta(days=1)
+    return labor_days
+
+def adjust_task_dates_by_offset(task: Task, start_offset=0):
+    """
+    Adjust the start_time and finish_time attributes of a task based on the provided start offset.
+    """
+    task.start_time += start_offset
+    task.finish_time += start_offset
+
+
+
 def readProjects():
     projects = []
     
     # Reading projects from the [PROJECTS] section of the config.ini file
+    project_data = {}
     for project_name, project_values in config['PROJECTS'].items():
         start_date, deadline, daily_penalty = project_values.split(',')
-        project = Project(project_name, start_date, deadline, float(daily_penalty))
+        project_data[project_name] = datetime.strptime(start_date, "%d-%m-%Y")
+
+    # Find the earliest start date
+    earliest_start = min(project_data.values())
+
+    # Create Project instances with calculated start offsets
+    for project_name, start_date in project_data.items():
+        _, deadline, daily_penalty = config['PROJECTS'][project_name].split(',')
+        start_offset = get_labor_days_difference(earliest_start, start_date)
+        project = Project(project_name, start_date.strftime("%d-%m-%Y"), deadline, float(daily_penalty), start_offset)
         projects.append(project)
     
     return projects
+
+
+
+
+
 
 def readInputs(project):
 
@@ -101,9 +140,8 @@ def readInputs(project):
                     raise ValueError(f"Invalid resource value '{res}' for task {row['ID']} in resource column {col_name}. Expected a numeric value.")
 
         task = Task(i, row['ID'], row['Name'], row['Duration'], predecessors, successors, resources, project)
+        adjust_task_dates_by_offset(task, project.start_offset)
         tasks.append(task)
-
-    #print(tasks)
 
     # Create list of resource objects
     resources_list = []
@@ -119,26 +157,29 @@ def readInputs(project):
                 resource_label = resources_list[resource_id].name   # Fetching the name attribute from the Resource object
                 raise ValueError(f"Project {instanceName} - Task {task.label} {task.name} demands {units} units of resource {resource_label}, but only {resources_availability[resource_id]} units are available.")
 
-    inputs = Inputs(instanceName, len(tasks), len(resources_list), tasks, resources_list)
-    return inputs
+    # Append tasks and resources to the given project.
+    project.tasks.extend(tasks)
+    project.resources.extend(resources_list)
+
+    return project
 
 
-def SolutionToDF(inputs, solution):
-    # Create a DataFrame to store the solution tasks
+def ProjectToDF(project):
+    # Create a DataFrame to store the project tasks
     data = {
-        "Task Label": [task.label for task in solution.tasks],
-        "Task Name": [task.name for task in solution.tasks],
-        "Duration": [task.duration for task in solution.tasks],
-        "Start Time": [task.start_time for task in solution.tasks],
-        "Finish Time": [task.finish_time for task in solution.tasks],
+        "Task Label": [task.label for task in project.tasks],
+        "Task Name": [task.name for task in project.tasks],
+        "Duration": [task.duration for task in project.tasks],
+        "Start Time": [task.start_time for task in project.tasks],
+        "Finish Time": [task.finish_time for task in project.tasks],
     }
 
     # Collect predecessors and successors data
     predecessors_data = []
     successors_data = []
-    for task in solution.tasks:
-        predecessors_data.append(", ".join(get_predecessor_notation(inputs.tasks[pred].label, extra_time) for pred, extra_time in task.predecessors.items()))
-        successors_data.append(", ".join(get_predecessor_notation(inputs.tasks[succ].label, extra_time) for succ, extra_time in task.successors.items()))
+    for task in project.tasks:
+        predecessors_data.append(", ".join(get_predecessor_notation(project.tasks[pred].label, extra_time) for pred, extra_time in task.predecessors.items()))
+        successors_data.append(", ".join(get_predecessor_notation(project.tasks[succ].label, extra_time) for succ, extra_time in task.successors.items()))
 
     # Add predecessors and successors data to the DataFrame
     data["Predecessors"] = predecessors_data
@@ -146,6 +187,7 @@ def SolutionToDF(inputs, solution):
 
     df = pd.DataFrame(data)
     return df
+
 
 
 def write_solutions_to_excel(dfs, sheet_names):
@@ -192,30 +234,30 @@ def topological_sort(tasks):
 """
 Topological Ordering and Resource Allocation (TORA) heuristic.
 """
-def TORA_Heuristic(inputs):
+def TORA_Heuristic(project):
     solution = Solution()
     
     # Initialize resources availability
-    resources_availability = {resource.id: resource.units for resource in inputs.resources}
+    resources_availability = {resource.id: resource.units for resource in project.resources}
 
     # Initialize dictionary to keep track of resources used by each task
-    resources_used = {task.id: set() for task in inputs.tasks}
+    resources_used = {task.id: set() for task in project.tasks}
 
     # Check if any task demands more units of a resource than its total capacity
-    for task in inputs.tasks:
+    for task in project.tasks:
         for resource_id, units in task.resources.items():
             if units > resources_availability[resource_id]:
                 sys.exit(f"[ERROR]: Task {task.label} demands {units} units of resource {resource_id}, but only {resources_availability[resource_id]} units are available.")
 
     # Topologically sort the tasks
-    sorted_tasks = topological_sort(inputs.tasks)
+    sorted_tasks = topological_sort(project.tasks)
 
     # Loop over the tasks in topological order
     for task in sorted_tasks:
         # Calculate earliest start time for task considering predecessor dependencies
-        earliest_start_time = 0
+        earliest_start_time = task.start_time # Use the task's current start time as the base
         for pred_id, extra_time in task.predecessors.items():
-            pred_task = inputs.tasks[pred_id]
+            pred_task = project.tasks[pred_id]
             if extra_time >= 0:
                 # Add extra time to the ending time of predecessor
                 earliest_start_time = max(earliest_start_time, pred_task.finish_time + extra_time)
@@ -226,9 +268,9 @@ def TORA_Heuristic(inputs):
         # Refine earliest start time for task considering resource availability
         for resource_id, units in task.resources.items():
             while resources_availability[resource_id] < units:
-                resource = inputs.resources[resource_id]
+                resource = project.resources[resource_id]
                 # Sort assigned tasks to resource by finish time
-                assigned_tasks = [inputs.tasks[task_id] for task_id, _ in resource.assigned_tasks.items()]
+                assigned_tasks = [project.tasks[task_id] for task_id, _ in resource.assigned_tasks.items()]
                 assigned_tasks.sort(key=lambda t: t.finish_time)
                 if not assigned_tasks:
                     raise ValueError(f"No more assigned tasks available for resource {resource_id}")
@@ -236,7 +278,7 @@ def TORA_Heuristic(inputs):
 
                 # Release resources used by task
                 for rel_resource_id in resources_used[assigned_task.id]:
-                    rel_resource = inputs.resources[rel_resource_id]
+                    rel_resource = project.resources[rel_resource_id]
                     # Update resources assigned tasks
                     rel_units = rel_resource.assigned_tasks[assigned_task.id]
                     resources_availability[rel_resource_id] += rel_units
@@ -255,7 +297,7 @@ def TORA_Heuristic(inputs):
         # Assign resources to task
         for resource_id, units in task.resources.items():
             resources_availability[resource_id] -= units
-            resource = inputs.resources[resource_id]
+            resource = project.resources[resource_id]
             resource.assigned_tasks[task.id] = units
             resources_used[task.id].add(resource_id)
 
@@ -269,20 +311,20 @@ def TORA_Heuristic(inputs):
 """
 Network diagram generator
 """
-def network_diagram(inputs):
+def network_diagram(project):
     solution = Solution()
     
     # Topologically sort the tasks. A topological sort is an algorithm that takes a directed
     # graph and returns a linear ordering of its vertices (nodes) such that, for every
     # directed edge (u, v) from vertex u to vertex v, u comes before v in the ordering
-    sorted_tasks = topological_sort(inputs.tasks)
+    sorted_tasks = topological_sort(project.tasks)
 
     # Loop over the tasks in topological order
     for task in sorted_tasks:
         # Calculate earliest start time for task considering predecessor dependencies
-        earliest_start_time = 0
+        earliest_start_time = task.start_time # Use the task's current start time as the base
         for pred_id, extra_time in task.predecessors.items():
-            pred_task = inputs.tasks[pred_id]
+            pred_task = project.tasks[pred_id]
             if extra_time >= 0:
                 # Add extra time to the ending time of predecessor
                 earliest_start_time = max(earliest_start_time, pred_task.finish_time + extra_time)
@@ -296,6 +338,6 @@ def network_diagram(inputs):
 
         # Add task to project schedule
         solution.tasks.append(task)
-
+ 
     solution.time = task.finish_time
     return solution
