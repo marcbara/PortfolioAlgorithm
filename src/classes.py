@@ -14,6 +14,11 @@ class Project:
         self.deadline = deadline
         self.dailyPenalty = dailyPenalty
 
+    def __repr__(self):
+        return (f"Project({self.instanceName!r}, Start: {self.startDate}, "
+                f"Deadline: {self.deadline}, Daily Penalty: {self.dailyPenalty})\n")
+
+
 class Task:
     """
     Represents a task in a project with its associated properties.
@@ -28,23 +33,27 @@ class Task:
         resources (dict): Maps resource IDs to required number of units.
         start_time (int): Calculated start time of the task.
         finish_time (int): Calculated finish time of the task.
+        project (Project): The project to which this task belongs.
     """
-    def __init__(self, id, label, name, duration, predecessors, successors, resources):
-        self.id = id # a unique integer ID for the task
-        self.label = label # a unique label for the task
-        self.name = name # the name of the task
-        self.duration = duration # time required to complete the task
-        self.predecessors = predecessors # maps predecessor IDs to time that
-        # must be added to predecessors' starting (-) / end (+) time before current
-        # task can start; e.g.: {2: -3, 5: 1} means that current task can only start
-        # three time units after task 2 has started and 1 unit after task 5 has ended
-        self.successors = successors # maps successor IDs to time after current task can start
-        self.resources = resources # maps resource IDs to number of units required
+    def __init__(self, id, label, name, duration, predecessors, successors, resources, project=None):
+        self.id = id
+        self.label = label
+        self.name = name
+        self.duration = duration
+        self.predecessors = predecessors
+        self.successors = successors
+        self.resources = resources
         self.start_time = 0
         self.finish_time = 0
+        self.project = project
 
     def __repr__(self):
-        return f"Task {self.label}: Name {self.name}, Duration {self.duration}, Start time {self.start_time}, End time {self.finish_time}"
+        predecessor_labels = ", ".join(str(label) for label in self.predecessors.keys())
+        return (f"Task(ID: {self.id}, Label: {self.label}, Name: {self.name}, "
+                f"Duration: {self.duration}, Start time: {self.start_time}, "
+                f"End time: {self.finish_time}, Project: {self.project.instanceName if self.project else 'None'}, "
+                f"Predecessors IDs: [{predecessor_labels}])\n")
+
 
 class Resource:
     """
@@ -83,18 +92,15 @@ class Solution:
         Solution.lastID += 1
         self.ID = Solution.lastID
         self.tasks = []
-        #self.cost = 0
         self.time = 0
 
   
-
-
 class Inputs:
     """
     Represents the inputs for a given instance.
     
     Attributes:
-        name (str): Name of the instance.
+        name (str): Name of the Project instance.
         nTasks (int): Number of tasks in the instance.
         nResources (int): Number of resources in the instance.
         tasks (list): A list of task objects for the instance.

@@ -36,7 +36,10 @@ def readProjects():
     
     return projects
 
-def readInputs(instanceName):
+def readInputs(project):
+
+    instanceName = project.instanceName
+
     # Reading resources from the RESOURCES_SHEET_NAME
     resources_df = pd.read_excel(os.path.join(INPUTS_DIR, PORTFOLIO_FILE), sheet_name=RESOURCES_SHEET_NAME)
 
@@ -97,8 +100,10 @@ def readInputs(instanceName):
                 except ValueError:
                     raise ValueError(f"Invalid resource value '{res}' for task {row['ID']} in resource column {col_name}. Expected a numeric value.")
 
-        task = Task(i, row['ID'], row['Name'], row['Duration'], predecessors, successors, resources)
+        task = Task(i, row['ID'], row['Name'], row['Duration'], predecessors, successors, resources, project)
         tasks.append(task)
+
+    #print(tasks)
 
     # Create list of resource objects
     resources_list = []
@@ -117,18 +122,6 @@ def readInputs(instanceName):
     inputs = Inputs(instanceName, len(tasks), len(resources_list), tasks, resources_list)
     return inputs
 
-
-# def run_project(project_instance_name):
-#     # Read inputs for the test
-#     inputs = readInputs(project_instance_name)
-
-#     # Calculate solution for the given scenario
-#     solution_df_constrained = TORA_Heuristic(inputs)
-    
-#     # Calculate solution only as a network diagram
-#     solution_nd = network_diagram(inputs)
-    
-#     return solution_df_constrained, solution_nd
 
 def SolutionToDF(inputs, solution):
     # Create a DataFrame to store the solution tasks
@@ -159,7 +152,8 @@ def write_solutions_to_excel(dfs, sheet_names):
     # Create the output directory if it doesn't exist
     os.makedirs(OUTPUTS_DIR, exist_ok=True)
     # Write all dataframes to a single Excel file with different sheets
-    with pd.ExcelWriter(os.path.join(OUTPUTS_DIR, "Portfolio_solutions.xlsx")) as writer:
+    output_filename = f"{PORTFOLIO_FILE.split('.')[0]}_solutions.xlsx"
+    with pd.ExcelWriter(os.path.join(OUTPUTS_DIR, output_filename)) as writer:
         for df, sheet_name in zip(dfs, sheet_names):
             df.to_excel(writer, sheet_name=sheet_name, index=False)
 
@@ -282,7 +276,8 @@ def network_diagram(inputs):
     # graph and returns a linear ordering of its vertices (nodes) such that, for every
     # directed edge (u, v) from vertex u to vertex v, u comes before v in the ordering
     sorted_tasks = topological_sort(inputs.tasks)
-
+    print(sorted_tasks)
+    
     # Loop over the tasks in topological order
     for task in sorted_tasks:
         # Calculate earliest start time for task considering predecessor dependencies
