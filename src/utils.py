@@ -23,23 +23,15 @@ TASKS_SHEET_NAME = "Tasks"
 RESOURCES_SHEET_NAME = "Resources"
 
      
-def readTests(fileName):
+def readTests():
     tests = []
-    path_to_file = os.path.join(TESTS_DIR, fileName)
- 
-    if not os.path.exists(path_to_file):
-        raise FileNotFoundError(f"The file {path_to_file} does not exist.")
     
-    with open(path_to_file) as f:
-        for line in f:
-            tokens = line.split("\t")
-            if tokens and '#' not in tokens[0]:
-                instance_name = tokens[0].strip()
-                start_date = tokens[1].strip() if len(tokens) > 1 else None
-                deadline = tokens[2].strip() if len(tokens) > 2 else None
-                daily_penalty = tokens[3].strip() if len(tokens) > 3 else None
-                test = Test(instance_name, start_date, deadline, daily_penalty)
-                tests.append(test)
+    # Reading tests from the [TESTS] section of the config.ini file
+    for test_name, test_values in config['TESTS'].items():
+        start_date, deadline, daily_penalty = test_values.split(',')
+        test = Test(test_name, start_date, deadline, float(daily_penalty))
+        tests.append(test)
+    
     return tests
 
 
