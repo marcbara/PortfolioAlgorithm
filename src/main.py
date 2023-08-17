@@ -1,11 +1,7 @@
-from utils import readTests, readInputs, TORA_Heuristic, printSolutionToExcel, network_diagram, OUTPUTS_DIR
-from classes import Test
-import pandas as pd
-import os
-
+from utils import readTests, readInputs, TORA_Heuristic, network_diagram, SolutionToDF, write_solutions_to_excel
 
 def main():
-# Read tests from the file
+    # Read tests from the file
     tests = readTests()
 
     # Lists to accumulate dataframes and sheet names
@@ -13,23 +9,23 @@ def main():
     sheet_names = []
 
     for test in tests:
-        # Read inputs for the test inputs
+        # Read inputs for the test
         inputs = readInputs(test.instanceName)
 
         # Calculate solution for the given scenario
-        solution_df_constrained = TORA_Heuristic(inputs)
-        dfs.append(printSolutionToExcel(inputs, solution_df_constrained, test.instanceName + "_Constrained"))
+        solution_constrained = TORA_Heuristic(inputs)
+        df_constrained = SolutionToDF(inputs, solution_constrained)
+        dfs.append(df_constrained)
         sheet_names.append(test.instanceName + "_Constrained")
 
         # Calculate solution only as a network diagram
         solution_nd = network_diagram(inputs)
-        dfs.append(printSolutionToExcel(inputs, solution_nd, test.instanceName + "_notConstrained"))
+        df_not_constrained = SolutionToDF(inputs, solution_nd)
+        dfs.append(df_not_constrained)
         sheet_names.append(test.instanceName + "_notConstrained")
 
     # Write all dataframes to a single Excel file with different sheets
-    with pd.ExcelWriter(os.path.join(OUTPUTS_DIR, "Portfolio_solutions.xlsx")) as writer:
-        for df, sheet_name in zip(dfs, sheet_names):
-            df.to_excel(writer, sheet_name=sheet_name, index=False)
+    write_solutions_to_excel(dfs, sheet_names)
 
 if __name__ == "__main__":
     main()

@@ -121,16 +121,19 @@ def readInputs(instanceName):
     return inputs
 
 
-def get_predecessor_notation(task_label, extra_time):
-    if extra_time == 0:
-        return task_label
-    elif extra_time > 0:
-        return f"{task_label}FC+{extra_time}"
-    else:
-        return f"{task_label}FC-{extra_time}"
+def run_test(test_instance_name):
+    # Read inputs for the test
+    inputs = readInputs(test_instance_name)
 
+    # Calculate solution for the given scenario
+    solution_df_constrained = TORA_Heuristic(inputs)
+    
+    # Calculate solution only as a network diagram
+    solution_nd = network_diagram(inputs)
+    
+    return solution_df_constrained, solution_nd
 
-def printSolutionToExcel(inputs, solution, sheet_name_suffix):
+def SolutionToDF(inputs, solution):
     # Create a DataFrame to store the solution tasks
     data = {
         "Task Label": [task.label for task in solution.tasks],
@@ -152,26 +155,25 @@ def printSolutionToExcel(inputs, solution, sheet_name_suffix):
     data["Successors"] = successors_data
 
     df = pd.DataFrame(data)
-
     return df
 
-    # # Create the output directory if it doesn't exist
-    # os.makedirs(OUTPUTS_DIR, exist_ok=True)
 
-    # # Define the output file path in the output directory with the project name as a prefix
-    # output_file_path = os.path.join(OUTPUTS_DIR, f"{project_name}_output_solution.xlsx")
+def write_solutions_to_excel(dfs, sheet_names):
+    # Create the output directory if it doesn't exist
+    os.makedirs(OUTPUTS_DIR, exist_ok=True)
+    # Write all dataframes to a single Excel file with different sheets
+    with pd.ExcelWriter(os.path.join(OUTPUTS_DIR, "Portfolio_solutions.xlsx")) as writer:
+        for df, sheet_name in zip(dfs, sheet_names):
+            df.to_excel(writer, sheet_name=sheet_name, index=False)
 
 
-    # # Write the DataFrame to an Excel file in the output directory
-    # try:
-    #     df.to_excel(output_file_path, sheet_name="Solution", index=False)
-    # except Exception as e:
-    #     print(f"Error writing to Excel file: {e}")
-
-    # # Append cost and time to the Excel file as additional information
-    # with pd.ExcelWriter(output_file_path, engine='openpyxl', mode='a') as writer:
-    #     additional_info_df = pd.DataFrame({"Time": [solution.time]})
-    #     additional_info_df.to_excel(writer, sheet_name="Additional Info", index=False)
+def get_predecessor_notation(task_label, extra_time):
+    if extra_time == 0:
+        return task_label
+    elif extra_time > 0:
+        return f"{task_label}FC+{extra_time}"
+    else:
+        return f"{task_label}FC-{extra_time}"
 
 
 def topological_sort(tasks):
