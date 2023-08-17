@@ -130,7 +130,7 @@ def get_predecessor_notation(task_label, extra_time):
         return f"{task_label}FC-{extra_time}"
 
 
-def printSolutionToExcel(inputs, solution, project_name):
+def printSolutionToExcel(inputs, solution, sheet_name_suffix):
     # Create a DataFrame to store the solution tasks
     data = {
         "Task Label": [task.label for task in solution.tasks],
@@ -153,23 +153,25 @@ def printSolutionToExcel(inputs, solution, project_name):
 
     df = pd.DataFrame(data)
 
-    # Create the output directory if it doesn't exist
-    os.makedirs(OUTPUTS_DIR, exist_ok=True)
+    return df
 
-    # Define the output file path in the output directory with the project name as a prefix
-    output_file_path = os.path.join(OUTPUTS_DIR, f"{project_name}_output_solution.xlsx")
+    # # Create the output directory if it doesn't exist
+    # os.makedirs(OUTPUTS_DIR, exist_ok=True)
+
+    # # Define the output file path in the output directory with the project name as a prefix
+    # output_file_path = os.path.join(OUTPUTS_DIR, f"{project_name}_output_solution.xlsx")
 
 
-    # Write the DataFrame to an Excel file in the output directory
-    try:
-        df.to_excel(output_file_path, sheet_name="Solution", index=False)
-    except Exception as e:
-        print(f"Error writing to Excel file: {e}")
+    # # Write the DataFrame to an Excel file in the output directory
+    # try:
+    #     df.to_excel(output_file_path, sheet_name="Solution", index=False)
+    # except Exception as e:
+    #     print(f"Error writing to Excel file: {e}")
 
-    # Append cost and time to the Excel file as additional information
-    with pd.ExcelWriter(output_file_path, engine='openpyxl', mode='a') as writer:
-        additional_info_df = pd.DataFrame({"Time": [solution.time]})
-        additional_info_df.to_excel(writer, sheet_name="Additional Info", index=False)
+    # # Append cost and time to the Excel file as additional information
+    # with pd.ExcelWriter(output_file_path, engine='openpyxl', mode='a') as writer:
+    #     additional_info_df = pd.DataFrame({"Time": [solution.time]})
+    #     additional_info_df.to_excel(writer, sheet_name="Additional Info", index=False)
 
 
 def topological_sort(tasks):
