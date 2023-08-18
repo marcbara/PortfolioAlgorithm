@@ -1,4 +1,4 @@
-from utils import readProjects, readInputs, TORA_Heuristic, network_diagram, ProjectToDF, write_solutions_to_excel
+from utils import readProjects, readInputs, TORA_Heuristic, network_diagram, ProjectToDF, write_solutions_to_excel, set_project_task_dates
 import copy
 
 
@@ -19,6 +19,7 @@ def main():
         # Calculate solution for the given scenario
         solution_constrained = TORA_Heuristic(project_for_tora)
         solved_constrained_project = solution_constrained.to_project(project_for_tora)
+        set_project_task_dates(solved_constrained_project, portfolio.start_date)
 
         df_constrained = ProjectToDF(solved_constrained_project)
         dfs.append(df_constrained)
@@ -29,6 +30,7 @@ def main():
         # Calculate solution only as a network diagram
         solution_nd = network_diagram(project_for_nd)
         solved_notconstrained_project = solution_nd.to_project(project_for_nd)
+        set_project_task_dates(solved_notconstrained_project, portfolio.start_date)
 
         df_not_constrained = ProjectToDF(solved_notconstrained_project)
         dfs.append(df_not_constrained)

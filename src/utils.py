@@ -50,8 +50,12 @@ def adjust_task_dates_by_offset(task: Task, start_offset=0):
 def set_task_absolute_dates(task: Task, portfolio_start_date: str):
     date_format = "%d-%m-%Y"
     portfolio_date = datetime.strptime(portfolio_start_date, date_format)
-    task.start_date = portfolio_date + timedelta(days=task.start_time)
-    task.finish_date = portfolio_date + timedelta(days=task.finish_time)
+    task.start_date = (portfolio_date + timedelta(days=task.start_time)).strftime(date_format)
+    task.finish_date = (portfolio_date + timedelta(days=task.finish_time)).strftime(date_format)
+
+def set_project_task_dates(project: Project, portfolio_start_date: str):
+    for task in project.tasks:
+        set_task_absolute_dates(task, portfolio_start_date)
 
 
 def readProjects():
@@ -167,7 +171,6 @@ def readInputs(project):
 
     return project
 
-
 def ProjectToDF(project):
     # Create a DataFrame to store the project tasks
     data = {
@@ -176,6 +179,8 @@ def ProjectToDF(project):
         "Duration": [task.duration for task in project.tasks],
         "Start Time": [task.start_time for task in project.tasks],
         "Finish Time": [task.finish_time for task in project.tasks],
+        "Start Date": [task.start_date for task in project.tasks],
+        "Finish Date": [task.finish_date for task in project.tasks],
     }
 
     # Collect predecessors and successors data
