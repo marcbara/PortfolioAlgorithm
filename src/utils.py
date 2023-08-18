@@ -1,7 +1,7 @@
 import pandas as pd
 import sys, os
 import configparser
-from classes import Task, Resource, Project, Solution
+from classes import Task, Resource, Project, Solution, Portfolio
 from datetime import datetime, timedelta
 
 # Get the directory of the currently executing script
@@ -47,12 +47,14 @@ def adjust_task_dates_by_offset(task: Task, start_offset=0):
     task.start_time += start_offset
     task.finish_time += start_offset
 
+def set_task_absolute_dates(task: Task, portfolio_start_date: str):
+    date_format = "%d-%m-%Y"
+    portfolio_date = datetime.strptime(portfolio_start_date, date_format)
+    task.start_date = portfolio_date + timedelta(days=task.start_time)
+    task.finish_date = portfolio_date + timedelta(days=task.finish_time)
 
 
 def readProjects():
-    projects = []
-    
-    # Reading projects from the [PROJECTS] section of the config.ini file
     project_data = {}
     for project_name, project_values in config['PROJECTS'].items():
         start_date, deadline, daily_penalty = project_values.split(',')
@@ -61,18 +63,20 @@ def readProjects():
     # Find the earliest start date
     earliest_start = min(project_data.values())
 
-    # Create Project instances with calculated start offsets
+    projects_list = []
     for project_name, start_date in project_data.items():
         _, deadline, daily_penalty = config['PROJECTS'][project_name].split(',')
         start_offset = get_labor_days_difference(earliest_start, start_date)
         project = Project(project_name, start_date.strftime("%d-%m-%Y"), deadline, float(daily_penalty), start_offset)
-        projects.append(project)
+        projects_list.append(project)
     
-    return projects
+    # Create the Portfolio object
+    portfolio_start_date = earliest_start.strftime("%d-%m-%Y")
+    portfolio = Portfolio(portfolio_start_date)
+    for project in projects_list:
+        portfolio.add_project(project)
 
-
-
-
+    return portfolio
 
 
 def readInputs(project):

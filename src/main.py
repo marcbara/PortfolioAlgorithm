@@ -4,13 +4,13 @@ import copy
 
 def main():
     # Read projects from the file
-    projects = readProjects()
+    portfolio = readProjects()
 
     # Lists to accumulate dataframes and sheet names
     dfs = []
     sheet_names = []
 
-    for project in projects:
+    for project in portfolio.projects:
         # Read inputs (tasks and resources) for one project
         original_project = readInputs(project)
 

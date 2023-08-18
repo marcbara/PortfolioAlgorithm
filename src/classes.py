@@ -1,3 +1,28 @@
+class Portfolio:
+    """
+    Represents a collection of project instances.
+    
+    Attributes:
+        projects (list): List of projects in the portfolio.
+        start_date (str): Absolute start date for the portfolio.
+    """
+    def __init__(self, start_date):
+        self.projects = []
+        self.start_date = start_date
+
+    def add_project(self, project):
+        """
+        Adds a project to the portfolio.
+        
+        Parameters:
+            project (Project): The project instance to be added.
+        """
+        self.projects.append(project)
+
+    def __repr__(self):
+        return f"Portfolio(Start Date: {self.start_date}, Projects: {[project.instanceName for project in self.projects]})"
+
+
 class Project:
     """
     Represents a project instance with its associated properties, tasks, and resources.
@@ -38,9 +63,11 @@ class Task:
         predecessors (dict): Maps predecessor task IDs to time offsets.
         successors (dict): Maps successor task IDs to time offsets.
         resources (dict): Maps resource IDs to required number of units.
-        start_time (int): Calculated start time of the task.
-        finish_time (int): Calculated finish time of the task.
+        start_time (int): Start time of the task, in days, wrt portfolio start
+        finish_time (int): Finish time of the task, in days, wrt portfolio start.
         project (Project): The project to which this task belongs.
+        start_date (str): Absolute start calendar date
+        finis_date (str): Absolute finish calendar date
     """
     def __init__(self, id, label, name, duration, predecessors, successors, resources, project=None):
         self.id = id
@@ -53,6 +80,8 @@ class Task:
         self.start_time = 0
         self.finish_time = 0
         self.project = project
+    start_date = None
+    finish_date = None
 
     def __repr__(self):
         predecessor_labels = ", ".join(str(label) for label in self.predecessors.keys())
