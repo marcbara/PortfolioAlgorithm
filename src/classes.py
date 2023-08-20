@@ -44,7 +44,7 @@ class Project:
         self.start_offset = start_offset
         self.tasks = []
         self.resources = []
-
+    
     def __repr__(self):
         return (f"Project({self.instanceName!r}, Start: {self.startDate}, "
                 f"Deadline: {self.deadline}, Daily Penalty: {self.dailyPenalty}, "

@@ -405,7 +405,8 @@ def TORA_Heuristic(project):
 
         # Add task to project schedule
         solution.tasks.append(task)
-
+    
+    sorted_tasks.sort(key=lambda task: task.label) #re-sorts the tasks list based on their label
     solution.time = task.finish_time
     return solution
 
@@ -447,5 +448,6 @@ def network_diagram(project):
         # Add task to project schedule
         solution.tasks.append(task)
  
+    sorted_tasks.sort(key=lambda task: task.label) #re-sorts the tasks list based on their label
     solution.time = task.finish_time
     return solution
