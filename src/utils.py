@@ -3,7 +3,7 @@ import sys, os
 import configparser
 from classes import Task, Resource, Project, Solution, Portfolio
 from datetime import datetime, timedelta
-from pandas.tseries.offsets import CustomBusinessDay
+import logging
 
 
 # Get the directory of the currently executing script
@@ -19,7 +19,6 @@ read_files = config.read(config_file_path)
 if not read_files:
     print("Failed to read the config.ini file.")
 
-
 # Adjust directory paths to be absolute paths relative to the current_directory
 OUTPUTS_DIR = os.path.join(current_directory, config['PATHS']['OUTPUTS_DIR'])
 INPUTS_DIR = os.path.join(current_directory, config['PATHS']['INPUTS_DIR'])
@@ -27,6 +26,12 @@ INPUTS_DIR = os.path.join(current_directory, config['PATHS']['INPUTS_DIR'])
 # Constants
 RESOURCES_SHEET_NAME = "Resources"
 PORTFOLIO_FILE = config['PATHS']['PORTFOLIO_FILE']
+
+# Set up logging
+log_filename = os.path.join(OUTPUTS_DIR, "algorithm_log.txt")
+logging.basicConfig(filename=log_filename, level=logging.INFO, format='%(message)s', filemode='w')
+
+
 
 def get_earliest_date(dates):
     """
@@ -414,7 +419,7 @@ def TORA_Heuristic(project):
             
             delay = earliest_start_time - initial_earliest_start_time
             if delay > 0:
-                print(f"Task '{task.label}' from project '{task.project.instanceName}' has been delayed by {delay} days due to insufficient availability of resource '{project.resources[resource_id].label}'.")
+                logging.info(f"Task '{task.label}' from project '{task.project.instanceName}' has been delayed by {delay} days due to insufficient availability of resource '{project.resources[resource_id].label}'.")
 
         # Update finish time of task
         task.start_time = earliest_start_time
