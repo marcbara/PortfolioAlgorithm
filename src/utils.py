@@ -27,11 +27,30 @@ RESOURCES_SHEET_NAME = "Resources"
 PORTFOLIO_FILE = config['PATHS']['PORTFOLIO_FILE']
 
 def get_earliest_date(dates):
+    """
+    Find and return the earliest date from a list of date strings.
+
+    Args:
+        dates (list): List of date strings in the format "dd-mm-yyyy".
+
+    Returns:
+        datetime: The earliest date found in the list.
+    """
     date_format = "%d-%m-%Y"
     parsed_dates = [datetime.strptime(date, date_format) for date in dates]
     return min(parsed_dates)
 
 def get_labor_days_difference(start_date, end_date):
+    """
+    Calculate the number of labor days between two dates, excluding weekends (Saturday and Sunday).
+
+    Args:
+        start_date (datetime): The starting date.
+        end_date (datetime): The ending date.
+
+    Returns:
+        int: The number of labor days between the two dates.
+    """
     current_date = start_date
     labor_days = 0
     while current_date < end_date:
@@ -43,22 +62,46 @@ def get_labor_days_difference(start_date, end_date):
 def adjust_task_dates_by_offset(task: Task, start_offset=0):
     """
     Adjust the start_time and finish_time attributes of a task based on the provided start offset.
+
+    Args:
+        task (Task): The task to adjust.
+        start_offset (int, optional): The offset to apply to the task's start and finish times. Default is 0.
     """
     task.start_time += start_offset
     task.finish_time += start_offset
 
 def set_task_absolute_dates(task: Task, portfolio_start_date: str):
+    """
+    Set the absolute start and finish dates for a task based on the portfolio's start date.
+
+    Args:
+        task (Task): The task to update.
+        portfolio_start_date (str): The start date of the portfolio in "dd-mm-yyyy" format.
+    """
     date_format = "%d-%m-%Y"
     portfolio_date = datetime.strptime(portfolio_start_date, date_format)
     task.start_date = (portfolio_date + timedelta(days=task.start_time)).strftime(date_format)
     task.finish_date = (portfolio_date + timedelta(days=task.finish_time)).strftime(date_format)
 
 def set_project_task_dates(project: Project, portfolio_start_date: str):
+    """
+    Set the absolute start and finish dates for tasks in a project based on the portfolio's start date.
+
+    Args:
+        project (Project): The project whose tasks' dates need to be set.
+        portfolio_start_date (str): The start date of the portfolio in "dd-mm-yyyy" format.
+    """
     for task in project.tasks:
         set_task_absolute_dates(task, portfolio_start_date)
 
 
 def readProjects():
+    """
+    Read project information from the config file and create a Portfolio object.
+
+    Returns:
+        Portfolio: The created portfolio containing projects and their associated information.
+    """
     project_data = {}
     for project_name, project_values in config['PROJECTS'].items():
         start_date, deadline, daily_penalty = project_values.split(',')
@@ -84,7 +127,15 @@ def readProjects():
 
 
 def readInputs(project):
+    """
+    Read input data from Excel files and populate the given project with tasks and resources.
 
+    Args:
+        project (Project): The project object to populate with data.
+
+    Returns:
+        Project: The project with populated tasks and resources.
+    """
     instanceName = project.instanceName
 
     # Reading resources from the RESOURCES_SHEET_NAME
@@ -172,6 +223,15 @@ def readInputs(project):
     return project
 
 def ProjectToDF(project):
+    """
+    Convert project task data into a pandas DataFrame.
+
+    Args:
+        project (Project): The project whose tasks' data needs to be converted.
+
+    Returns:
+        pd.DataFrame: A DataFrame containing project task data.
+    """
     # Create a DataFrame to store the project tasks
     data = {
         "Task Label": [task.label for task in project.tasks],
@@ -200,6 +260,13 @@ def ProjectToDF(project):
 
 
 def write_solutions_to_excel(dfs, sheet_names):
+    """
+    Write multiple DataFrames to an Excel file with different sheets.
+
+    Args:
+        dfs (list): List of pandas DataFrames to be written to the Excel file.
+        sheet_names (list): List of sheet names corresponding to each DataFrame.
+    """
     # Create the output directory if it doesn't exist
     os.makedirs(OUTPUTS_DIR, exist_ok=True)
     # Write all dataframes to a single Excel file with different sheets
@@ -210,6 +277,16 @@ def write_solutions_to_excel(dfs, sheet_names):
 
 
 def get_predecessor_notation(task_label, extra_time):
+    """
+    Get the notation for a predecessor task, including any extra time.
+
+    Args:
+        task_label (str): The label of the predecessor task.
+        extra_time (int): The extra time for the predecessor task.
+
+    Returns:
+        str: The notation for the predecessor task with extra time.
+    """
     if extra_time == 0:
         return task_label
     elif extra_time > 0:
@@ -219,6 +296,15 @@ def get_predecessor_notation(task_label, extra_time):
 
 
 def topological_sort(tasks):
+    """
+    Perform a topological sort on a list of tasks.
+
+    Args:
+        tasks (list): List of Task objects.
+
+    Returns:
+        list: A list of tasks in topological order.
+    """
     # Create a dictionary to store the number of incoming edges for each task
     in_degree = {task.id: len(task.predecessors) for task in tasks}
     # Initialize the queue with the tasks that have no incoming edges
@@ -240,12 +326,17 @@ def topological_sort(tasks):
     return sorted_tasks
 
 
-"""
-Topological Ordering and Resource Allocation (TORA) heuristic.
-"""
 def TORA_Heuristic(project):
     solution = Solution()
-    
+    """
+    Apply the Topological Ordering and Resource Allocation (TORA) heuristic to a project.
+
+    Args:
+        project (Project): The project on which to apply the TORA heuristic.
+
+    Returns:
+        Solution: The solution generated by the TORA heuristic.
+    """
     # Initialize resources availability
     resources_availability = {resource.id: resource.units for resource in project.resources}
 
@@ -258,7 +349,9 @@ def TORA_Heuristic(project):
             if units > resources_availability[resource_id]:
                 sys.exit(f"[ERROR]: Task {task.label} demands {units} units of resource {resource_id}, but only {resources_availability[resource_id]} units are available.")
 
-    # Topologically sort the tasks
+    # Topologically sort the tasks. A topological sort is an algorithm that takes a directed
+    # graph and returns a linear ordering of its vertices (nodes) such that, for every
+    # directed edge (u, v) from vertex u to vertex v, u comes before v in the ordering
     sorted_tasks = topological_sort(project.tasks)
 
     # Loop over the tasks in topological order
@@ -317,10 +410,16 @@ def TORA_Heuristic(project):
     return solution
 
 
-"""
-Network diagram generator
-"""
 def network_diagram(project):
+    """
+    Generate a network diagram for a project based on a topological sort.
+
+    Args:
+        project (Project): The project for which to generate the network diagram.
+
+    Returns:
+        Solution: The solution representing the network diagram.
+    """
     solution = Solution()
     
     # Topologically sort the tasks. A topological sort is an algorithm that takes a directed
