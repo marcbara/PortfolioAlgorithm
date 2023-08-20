@@ -1,10 +1,10 @@
-from utils import readProjects, readInputs, TORA_Heuristic, network_diagram, ProjectToDF, write_solutions_to_excel, set_project_task_dates, combine_projects, decompose_project
+from utils import read_projects, read_inputs, TORA_Heuristic, network_diagram, project_to_df, write_solutions_to_excel, set_project_task_dates, combine_projects, decompose_project
 import copy
 
 
 def main_independentprojects():
     # Read projects from the file
-    portfolio = readProjects()
+    portfolio = read_projects()
 
     # Lists to accumulate dataframes and sheet names
     dfs = []
@@ -12,7 +12,7 @@ def main_independentprojects():
 
     for project in portfolio.projects:
         # Read inputs (tasks and resources) for one project
-        original_project = readInputs(project)
+        original_project = read_inputs(project)
         
         # Make a deep copy for TORA
         project_for_tora = copy.deepcopy(original_project)
@@ -21,7 +21,7 @@ def main_independentprojects():
         solved_constrained_project = solution_constrained.to_project(project_for_tora)
         set_project_task_dates(solved_constrained_project, portfolio.start_date)
 
-        df_constrained = ProjectToDF(solved_constrained_project)
+        df_constrained = project_to_df(solved_constrained_project)
         dfs.append(df_constrained)
         sheet_names.append(project.instanceName + "_Constrained")
 
@@ -32,7 +32,7 @@ def main_independentprojects():
         solved_notconstrained_project = solution_nd.to_project(project_for_nd)
         set_project_task_dates(solved_notconstrained_project, portfolio.start_date)
 
-        df_not_constrained = ProjectToDF(solved_notconstrained_project)
+        df_not_constrained = project_to_df(solved_notconstrained_project)
         dfs.append(df_not_constrained)
         sheet_names.append(project.instanceName + "_notConstrained")
 
@@ -41,11 +41,11 @@ def main_independentprojects():
 
 def main_joinprojects():
     # Read projects from the file
-    portfolio = readProjects()
+    portfolio = read_projects()
 
     # Read inputs (tasks and resources) for each project in the portfolio
     for project in portfolio.projects:
-        readInputs(project)
+        read_inputs(project)
 
     # Combine all projects into one
     combined_project = combine_projects(portfolio)
@@ -79,12 +79,12 @@ def main_joinprojects():
 
     # Convert each decomposed project to a dataframe and add to the lists
     for project in decomposed_projects_constrained:
-        df_constrained = ProjectToDF(project)
+        df_constrained = project_to_df(project)
         dfs.append(df_constrained)
         sheet_names.append(project.instanceName + "_Constrained")
     
     for project in decomposed_projects_notconstrained:
-        df_not_constrained = ProjectToDF(project)
+        df_not_constrained = project_to_df(project)
         dfs.append(df_not_constrained)
         sheet_names.append(project.instanceName + "_notConstrained")
 

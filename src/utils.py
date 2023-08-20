@@ -117,7 +117,7 @@ def set_project_task_dates(project: Project, portfolio_start_date: str):
         set_task_absolute_dates(task, portfolio_start_date)
 
 
-def readProjects():
+def read_projects():
     """
     Read project information from the config file and create a Portfolio object.
 
@@ -148,7 +148,7 @@ def readProjects():
     return portfolio
 
 
-def readInputs(project):
+def read_inputs(project):
     """
     Read input data from Excel files and populate the given project with tasks and resources.
 
@@ -315,7 +315,7 @@ def decompose_project(combined_project, original_projects):
     
     return decomposed_projects
 
-def ProjectToDF(project):
+def project_to_df(project):
     """
     Convert project task data into a pandas DataFrame.
 
