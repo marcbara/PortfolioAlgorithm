@@ -405,8 +405,9 @@ def TORA_Heuristic(project):
 
         # Add task to project schedule
         solution.tasks.append(task)
-    
+    print(sorted_tasks)
     sorted_tasks.sort(key=lambda task: task.label) #re-sorts the tasks list based on their label
+    print(sorted_tasks)
     solution.time = task.finish_time
     return solution
 
