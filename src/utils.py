@@ -3,6 +3,8 @@ import sys, os
 import configparser
 from classes import Task, Resource, Project, Solution, Portfolio
 from datetime import datetime, timedelta
+from pandas.tseries.offsets import CustomBusinessDay
+
 
 # Get the directory of the currently executing script
 current_directory = os.path.dirname(os.path.abspath(__file__))
@@ -70,6 +72,7 @@ def adjust_task_dates_by_offset(task: Task, start_offset=0):
     task.start_time += start_offset
     task.finish_time += start_offset
 
+
 def set_task_absolute_dates(task: Task, portfolio_start_date: str):
     """
     Set the absolute start and finish dates for a task based on the portfolio's start date.
@@ -80,8 +83,24 @@ def set_task_absolute_dates(task: Task, portfolio_start_date: str):
     """
     date_format = "%d-%m-%Y"
     portfolio_date = datetime.strptime(portfolio_start_date, date_format)
-    task.start_date = (portfolio_date + timedelta(days=task.start_time)).strftime(date_format)
-    task.finish_date = (portfolio_date + timedelta(days=task.finish_time)).strftime(date_format)
+
+    # Calculate the start date by adding the business day offset
+    start_date = portfolio_date + pd.offsets.BDay(task.start_time)
+
+    if task.duration == 0:
+        finish_date = start_date
+    else:
+        # Calculate the finish date by adding the business day offset and duration
+        finish_date = start_date + pd.offsets.BDay(task.duration - 1)
+
+    # Set the start and finish dates in the task
+    task.start_date = start_date.strftime(date_format)
+    task.finish_date = finish_date.strftime(date_format)
+
+
+
+
+
 
 def set_project_task_dates(project: Project, portfolio_start_date: str):
     """
@@ -237,10 +256,10 @@ def ProjectToDF(project):
         "Task Label": [task.label for task in project.tasks],
         "Task Name": [task.name for task in project.tasks],
         "Duration": [task.duration for task in project.tasks],
-        "Start Time": [task.start_time for task in project.tasks],
-        "Finish Time": [task.finish_time for task in project.tasks],
         "Start Date": [task.start_date for task in project.tasks],
         "Finish Date": [task.finish_date for task in project.tasks],
+        "Start Time": [task.start_time for task in project.tasks],
+        "Finish Time": [task.finish_time for task in project.tasks],
     }
 
     # Collect predecessors and successors data
@@ -405,9 +424,10 @@ def TORA_Heuristic(project):
 
         # Add task to project schedule
         solution.tasks.append(task)
-    print(sorted_tasks)
-    sorted_tasks.sort(key=lambda task: task.label) #re-sorts the tasks list based on their label
-    print(sorted_tasks)
+    
+    # Sort tasks by label, for better intrepretation at the output
+    solution.tasks.sort(key=lambda task: int(task.label))
+
     solution.time = task.finish_time
     return solution
 
@@ -449,6 +469,8 @@ def network_diagram(project):
         # Add task to project schedule
         solution.tasks.append(task)
  
-    sorted_tasks.sort(key=lambda task: task.label) #re-sorts the tasks list based on their label
+    # Sort tasks by label, for better intrepretation at the output
+    solution.tasks.sort(key=lambda task: int(task.label))
+
     solution.time = task.finish_time
     return solution

@@ -80,15 +80,17 @@ class Task:
         self.start_time = 0
         self.finish_time = 0
         self.project = project
-    start_date = None
-    finish_date = None
+        self.start_date = None
+        self.finish_date = None
 
     def __repr__(self):
         predecessor_labels = ", ".join(str(label) for label in self.predecessors.keys())
         return (f"Task(ID: {self.id}, Label: {self.label}, Name: {self.name}, "
                 f"Duration: {self.duration}, Start time: {self.start_time}, "
                 f"End time: {self.finish_time}, Project: {self.project.instanceName if self.project else 'None'}, "
+                f"Start date: {self.start_date}, Finish date: {self.finish_date}, "
                 f"Predecessors IDs: [{predecessor_labels}])\n")
+
 
 
 class Resource:
