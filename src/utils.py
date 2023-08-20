@@ -4,6 +4,7 @@ import configparser
 from classes import Task, Resource, Project, Solution, Portfolio
 from datetime import datetime, timedelta
 import logging
+import copy
 
 
 # Get the directory of the currently executing script
@@ -101,9 +102,6 @@ def set_task_absolute_dates(task: Task, portfolio_start_date: str):
     # Set the start and finish dates in the task
     task.start_date = start_date.strftime(date_format)
     task.finish_date = finish_date.strftime(date_format)
-
-
-
 
 
 
@@ -246,6 +244,77 @@ def readInputs(project):
 
     return project
 
+
+def combine_projects(portfolio):
+    """
+    Combine all projects in a portfolio into a single project, preserving the task.project reference for each task.
+    
+    Args:
+        portfolio (Portfolio): The portfolio containing multiple projects.
+        
+    Returns:
+        Project: A single combined project.
+    """
+    combined_project = Project(
+        instanceName="CombinedProject",
+        startDate=portfolio.start_date,
+        deadline="",
+        dailyPenalty=0
+    )
+
+    task_offset = 0
+    for project in portfolio.projects:
+        project_task_ids = [task.id for task in project.tasks]  # Collecting the task IDs for each project
+        for task in project.tasks:
+            cloned_task = copy.deepcopy(task)
+            cloned_task.id += task_offset
+            
+            # Adjusting predecessors and successors to maintain the dictionary structure
+            cloned_task.predecessors = {pred_id + task_offset: gap for pred_id, gap in task.predecessors.items() if pred_id in project_task_ids}
+            cloned_task.successors = {succ_id + task_offset: gap for succ_id, gap in task.successors.items() if succ_id in project_task_ids}
+            
+            combined_project.tasks.append(cloned_task)
+        
+        task_offset += len(project.tasks)
+        
+        # Add resources only from the first project to avoid duplication
+        if combined_project.resources == []:
+            combined_project.resources.extend([copy.deepcopy(resource) for resource in project.resources])
+    
+    return combined_project
+
+
+def decompose_project(combined_project, original_projects):
+    """
+    Decompose a combined project back into individual projects based on the task.project attribute.
+    
+    Args:
+        combined_project (Project): The combined project after processing.
+        original_projects (list): List of original projects for reference.
+        
+    Returns:
+        list: List of decomposed projects.
+    """
+    decomposed_tasks = {project.instanceName: [] for project in original_projects}
+    
+    # Assign tasks back to their original projects using the task.project attribute
+    for task in combined_project.tasks:
+        decomposed_tasks[task.project.instanceName].append(task)
+    
+    decomposed_projects = []
+    for project in original_projects:
+        decomposed_project = Project(
+            instanceName=project.instanceName,
+            startDate=project.startDate,
+            deadline=project.deadline,
+            dailyPenalty=project.dailyPenalty
+        )
+        decomposed_project.tasks = decomposed_tasks[project.instanceName]
+        decomposed_project.resources = project.resources  # Reuse the original resources
+        decomposed_projects.append(decomposed_project)
+    
+    return decomposed_projects
+
 def ProjectToDF(project):
     """
     Convert project task data into a pandas DataFrame.
@@ -256,6 +325,9 @@ def ProjectToDF(project):
     Returns:
         pd.DataFrame: A DataFrame containing project task data.
     """
+    # Create a mapping from task ID to task object for quick lookups
+    task_map = {task.id: task for task in project.tasks}
+
     # Create a DataFrame to store the project tasks
     data = {
         "Task Label": [task.label for task in project.tasks],
@@ -271,8 +343,11 @@ def ProjectToDF(project):
     predecessors_data = []
     successors_data = []
     for task in project.tasks:
-        predecessors_data.append(", ".join(get_predecessor_notation(project.tasks[pred].label, extra_time) for pred, extra_time in task.predecessors.items()))
-        successors_data.append(", ".join(get_predecessor_notation(project.tasks[succ].label, extra_time) for succ, extra_time in task.successors.items()))
+        # Use the task_map to look up tasks by ID
+        pred_data = [get_predecessor_notation(task_map[pred].label, extra_time) for pred, extra_time in task.predecessors.items() if pred in task_map]
+        succ_data = [get_predecessor_notation(task_map[succ].label, extra_time) for succ, extra_time in task.successors.items() if succ in task_map]
+        predecessors_data.append(", ".join(pred_data))
+        successors_data.append(", ".join(succ_data))
 
     # Add predecessors and successors data to the DataFrame
     data["Predecessors"] = predecessors_data
@@ -280,7 +355,6 @@ def ProjectToDF(project):
 
     df = pd.DataFrame(data)
     return df
-
 
 
 def write_solutions_to_excel(dfs, sheet_names):
@@ -436,7 +510,7 @@ def TORA_Heuristic(project):
         solution.tasks.append(task)
     
     # Sort tasks by label, for better intrepretation at the output
-    solution.tasks.sort(key=lambda task: int(task.label))
+    solution.tasks.sort(key=lambda task: int(task.id))
 
     solution.time = task.finish_time
     return solution
@@ -480,7 +554,7 @@ def network_diagram(project):
         solution.tasks.append(task)
  
     # Sort tasks by label, for better intrepretation at the output
-    solution.tasks.sort(key=lambda task: int(task.label))
+    solution.tasks.sort(key=lambda task: int(task.id))
 
     solution.time = task.finish_time
     return solution

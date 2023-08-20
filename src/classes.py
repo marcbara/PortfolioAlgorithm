@@ -85,11 +85,13 @@ class Task:
 
     def __repr__(self):
         predecessor_labels = ", ".join(str(label) for label in self.predecessors.keys())
-        return (f"Task(ID: {self.id}, Label: {self.label}, Name: {self.name}, "
+        successors_labels = ", ".join(str(label) for label in self.successors.keys())
+        return (f"Task(ID: {self.id}, Label: {self.label}, "#Name: {self.name}, "
                 f"Duration: {self.duration}, Start time: {self.start_time}, "
                 f"End time: {self.finish_time}, Project: {self.project.instanceName if self.project else 'None'}, "
                 f"Start date: {self.start_date}, Finish date: {self.finish_date}, "
-                f"Predecessors IDs: [{predecessor_labels}])\n")
+                f"Predecessors IDs: [{predecessor_labels}]), "
+                f"Successors IDs: [{successors_labels}])\n")
 
 
 
