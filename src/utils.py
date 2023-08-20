@@ -388,6 +388,7 @@ def TORA_Heuristic(project):
 
         # Refine earliest start time for task considering resource availability
         for resource_id, units in task.resources.items():
+            initial_earliest_start_time = earliest_start_time
             while resources_availability[resource_id] < units:
                 resource = project.resources[resource_id]
                 # Sort assigned tasks to resource by finish time
@@ -410,6 +411,10 @@ def TORA_Heuristic(project):
 
                 # Update earliest start time considering task ending time
                 earliest_start_time = max(earliest_start_time, assigned_task.finish_time)
+            
+            delay = earliest_start_time - initial_earliest_start_time
+            if delay > 0:
+                print(f"Task '{task.label}' from project '{task.project.instanceName}' has been delayed by {delay} days due to insufficient availability of resource '{project.resources[resource_id].label}'.")
 
         # Update finish time of task
         task.start_time = earliest_start_time
