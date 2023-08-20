@@ -67,7 +67,7 @@ class Task:
         finish_time (int): Finish time of the task, in days, wrt portfolio start.
         project (Project): The project to which this task belongs.
         start_date (str): Absolute start calendar date
-        finis_date (str): Absolute finish calendar date
+        finish_date (str): Absolute finish calendar date
     """
     def __init__(self, id, label, name, duration, predecessors, successors, resources, project=None):
         self.id = id
