@@ -1,3 +1,5 @@
+from datetime import datetime
+
 class Portfolio:
     """
     Represents a collection of project instances.
@@ -44,6 +46,32 @@ class Project:
         self.start_offset = start_offset
         self.tasks = []
         self.resources = []
+        
+    def get_delivery_date(self):
+        """Compute the delivery date of the project based on the finish dates of its tasks."""
+        latest_finish_date = max(datetime.strptime(task.finish_date, '%d-%m-%Y').date() for task in self.tasks)
+        latest_finish_date_string = latest_finish_date.strftime('%d-%m-%Y')
+        return latest_finish_date_string
+
+    def compute_penalty(self):
+        from utils import get_labor_days_difference
+        """Compute the penalty for the actual delivery date of the project."""
+        # Get the actual delivery date from the tasks' finish dates
+        delivery_date = self.get_delivery_date()
+        
+        # Convert the delivery date and the deadline to Python date objects
+        delivery_date_obj = datetime.strptime(delivery_date, '%d-%m-%Y').date()
+        deadline_date_obj = datetime.strptime(self.deadline, '%d-%m-%Y').date()
+        
+        # Compute the difference in labor days between the delivery date and the deadline
+        days_late = get_labor_days_difference(deadline_date_obj, delivery_date_obj)
+        
+        # If the project is delivered on or before the deadline, the penalty is zero
+        if days_late <= 0:
+            return 0
+        
+        # If the project is delivered after the deadline, compute the total penalty
+        return days_late * self.dailyPenalty
     
     def __repr__(self):
         return (f"Project({self.instanceName!r}, Start: {self.startDate}, "

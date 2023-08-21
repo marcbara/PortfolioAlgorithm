@@ -1,0 +1,29 @@
+
+Delays in tasks due to collision of resources:
+- Task '5' from project 'P3' has been delayed by 45 days due to insufficient availability of resource 'R1'.
+- Task '6' from project 'P1' has been delayed by 75 days due to insufficient availability of resource 'R1'.
+- Task '7' from project 'P1' has been delayed by 8 days due to insufficient availability of resource 'R1'.
+- Task '8' from project 'P1' has been delayed by 16 days due to insufficient availability of resource 'R1'.
+- Task '9' from project 'P1' has been delayed by 24 days due to insufficient availability of resource 'R1'.
+- Task '8' from project 'P2' has been delayed by 15 days due to insufficient availability of resource 'R1'.
+- Task '7' from project 'P3' has been delayed by 37 days due to insufficient availability of resource 'R1'.
+- Task '12' from project 'P1' has been delayed by 25 days due to insufficient availability of resource 'R10'.
+- Task '9' from project 'P2' has been delayed by 8 days due to insufficient availability of resource 'R1'.
+- Task '8' from project 'P3' has been delayed by 20 days due to insufficient availability of resource 'R1'.
+- Task '11' from project 'P2' has been delayed by 30 days due to insufficient availability of resource 'R10'.
+- Task '12' from project 'P2' has been delayed by 60 days due to insufficient availability of resource 'R10'.
+- Task '14' from project 'P2' has been delayed by 30 days due to insufficient availability of resource 'R11'.
+- Task '15' from project 'P2' has been delayed by 95 days due to insufficient availability of resource 'R11'.
+- Task '9' from project 'P3' has been delayed by 150 days due to insufficient availability of resource 'R11'.
+- Task '13' from project 'P3' has been delayed by 75 days due to insufficient availability of resource 'R10'.
+- Task '53' from project 'P1' has been delayed by 415 days due to insufficient availability of resource 'R9'.
+
+Possible penalties in Constrained projects:
+- Project 'P1' was delivered late by 109 labor days, on 03-06-2026. The deadline was 01-01-2026. The total penalty is 54.5 k$.
+- Project 'P2' was delivered late by 104 labor days, on 27-05-2026. The deadline was 01-01-2026. The total penalty is 72.8 k$.
+- Project 'P3' was delivered late by 344 labor days, on 27-04-2028. The deadline was 01-01-2027. The total penalty is 309.6 k$.
+
+Possible penalties in Not Constrained projects:
+- Project 'P1' was delivered on time on 13-06-2024. There is no penalty.
+- Project 'P2' was delivered on time on 12-12-2025. There is no penalty.
+- Project 'P3' was delivered late by 92 labor days, on 11-05-2027. The deadline was 01-01-2027. The total penalty is 82.8 k$.

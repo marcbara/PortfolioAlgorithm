@@ -1,5 +1,6 @@
-from utils import read_projects, read_inputs, TORA_Heuristic, network_diagram, project_to_df, write_solutions_to_excel, set_project_task_dates, combine_projects, decompose_project
+from utils import log_project_penalty, read_projects, read_inputs, TORA_Heuristic, network_diagram, project_to_df, write_solutions_to_excel, set_project_task_dates, combine_projects, decompose_project
 import copy
+import logging
 
 
 def main_independentprojects():
@@ -78,14 +79,18 @@ def main_joinprojects():
         set_project_task_dates(project, portfolio.start_date)
 
     # Convert each decomposed project to a dataframe and add to the lists
+    logging.info("\nPossible penalties in Constrained projects:")
     for project in decomposed_projects_constrained:
         df_constrained = project_to_df(project)
         dfs.append(df_constrained)
+        log_project_penalty(project)
         sheet_names.append(project.instanceName + "_Constrained")
     
+    logging.info("\nPossible penalties in Not Constrained projects:")
     for project in decomposed_projects_notconstrained:
         df_not_constrained = project_to_df(project)
         dfs.append(df_not_constrained)
+        log_project_penalty(project)
         sheet_names.append(project.instanceName + "_notConstrained")
 
     # Write all dataframes to a single Excel file with different sheets
