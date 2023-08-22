@@ -5,6 +5,8 @@ from classes import Task, Resource, Project, Solution, Portfolio
 from datetime import datetime, timedelta
 import logging
 import copy
+import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
 
 
 # Get the directory of the currently executing script
@@ -583,3 +585,61 @@ def network_diagram(project):
 
     solution.time = task.finish_time
     return solution
+
+def display_gantt_chart(project, label=None):
+
+    # Prepare data for the Gantt chart
+    tasks_data = []
+    for task in project.tasks:
+        task_dict = {
+            "Task": task.name,
+            "Task_ID": task.id,
+            "Start": datetime.strptime(task.start_date, "%d-%m-%Y"),
+            "Finish": datetime.strptime(task.finish_date, "%d-%m-%Y"),
+            "Duration": task.duration,
+        }
+        tasks_data.append(task_dict)
+
+    # Sort tasks_data by task_id
+    tasks_data.sort(key=lambda x: x["Task_ID"])
+
+    # Reverse the order of tasks_data
+    tasks_data.reverse()
+
+    # Create a figure and axis
+    fig, ax = plt.subplots(figsize=(15, 10))
+
+    for idx, task in enumerate(tasks_data):
+        start_date = task["Start"]
+        finish_date = task["Finish"]
+        duration = (finish_date - start_date).days
+        ax.barh(idx, duration, left=start_date, color="lightblue")
+
+    # Set y-axis ticks and labels
+    y_labels = [task["Task"] for task in tasks_data]
+    y_ticks = range(len(y_labels))
+    ax.set_yticks(y_ticks)
+    ax.set_yticklabels(y_labels)
+
+    # Set labels and title with larger font size
+    # ax.set_xlabel("Date")
+    # ax.set_ylabel("Task")
+    ax.set_title(project.instanceName, fontsize=16)  # Set larger title font size
+
+    # Format the x-axis to display dates correctly
+    ax.xaxis.set_major_formatter(mdates.DateFormatter("%d-%m-%Y"))
+    ax.xaxis.set_major_locator(mdates.MonthLocator())  
+    plt.xticks(rotation=45)  # Rotate x-axis labels for better visibility
+
+    # Add vertical dotted grid lines
+    ax.xaxis.grid(True, linestyle='dotted')
+
+    if label:
+        handles, labels = ax.get_legend_handles_labels()
+        patch = plt.Line2D([0], [0], markerfacecolor="lightblue", marker='s', markersize=10, color="white", label=label)
+        handles.append(patch) 
+        ax.legend(handles=handles, loc="upper right")
+
+    # Show the plot
+    plt.tight_layout()
+    plt.show(block=False)

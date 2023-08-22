@@ -1,6 +1,10 @@
-from utils import log_project_penalty, read_projects, read_inputs, TORA_Heuristic, network_diagram, project_to_df, write_solutions_to_excel, set_project_task_dates, combine_projects, decompose_project
+from utils import read_projects, read_inputs 
+from utils import TORA_Heuristic, network_diagram, set_project_task_dates
+from utils import combine_projects, decompose_project
+from utils import display_gantt_chart, project_to_df, write_solutions_to_excel, log_project_penalty
 import copy
 import logging
+import matplotlib.pyplot as plt
 
 
 def main_independentprojects():
@@ -85,6 +89,8 @@ def main_joinprojects():
         dfs.append(df_constrained)
         log_project_penalty(project)
         sheet_names.append(project.instanceName + "_Constrained")
+        display_gantt_chart(project, "Constrained Resources")
+
     
     logging.info("\nPossible penalties in Not Constrained projects:")
     for project in decomposed_projects_notconstrained:
@@ -92,10 +98,13 @@ def main_joinprojects():
         dfs.append(df_not_constrained)
         log_project_penalty(project)
         sheet_names.append(project.instanceName + "_notConstrained")
+        display_gantt_chart(project, "Not-Constrained Resources")
 
     # Write all dataframes to a single Excel file with different sheets
     write_solutions_to_excel(dfs, sheet_names)
 
+    # Block Gantt Charts until user closes them
+    plt.show()
 
 if __name__ == "__main__":
     main_joinprojects()
