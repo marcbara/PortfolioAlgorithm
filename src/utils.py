@@ -589,17 +589,14 @@ def network_diagram(project):
 def display_gantt_chart(project, label=None):
 
     # Prepare data for the Gantt chart
-    tasks_data = []
-    for task in project.tasks:
-        task_dict = {
-            "Task": task.name,
-            "Task_ID": task.id,
-            "Start": datetime.strptime(task.start_date, "%d-%m-%Y"),
-            "Finish": datetime.strptime(task.finish_date, "%d-%m-%Y"),
-            "Duration": task.duration,
-        }
-        tasks_data.append(task_dict)
-
+    tasks_data = [{
+        "Task": task.name,
+        "Task_ID": task.id,
+        "Start": datetime.strptime(task.start_date, "%d-%m-%Y"),
+        "Finish": datetime.strptime(task.finish_date, "%d-%m-%Y"),
+        "Duration": task.duration,
+    } for task in project.tasks]
+    
     # Sort tasks_data by task_id
     tasks_data.sort(key=lambda x: x["Task_ID"])
 
