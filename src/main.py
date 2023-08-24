@@ -8,6 +8,17 @@ import matplotlib.pyplot as plt
 
 
 def main_independentprojects():
+    """
+    The function `main_independentprojects()` reads multiple projects from a file, processes them with TORA
+    (Task Ordering and Resource Allocation) and Network Diagram algorithms, converts the resulting projects
+    into dataframes and saves them in an excel file with different sheets. It does this for each project independently.
+
+    Parameters: None
+
+    Returns: None
+    """
+
+
     # Read projects from the file
     portfolio = read_projects()
 
@@ -45,6 +56,18 @@ def main_independentprojects():
     write_solutions_to_excel(dfs, sheet_names)
 
 def main_joinprojects():
+    """
+    The function `main_joinprojects()` reads input projects from a file, combines them, processes them with
+    TORA (Task Ordering and Resource Allocation), Network Diagram algorithm and generates decomposed
+    output projects using specialized functions. It then converts the decomposed projects into dataframes,
+    logs possible penalties, displays Gantt charts of the resources and saves the dataframes in an excel
+    file with different sheets.
+
+    Parameters: None
+
+    Returns: None
+    """
+
     # Read projects from the file
     portfolio = read_projects()
 

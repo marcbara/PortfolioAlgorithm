@@ -643,3 +643,7 @@ def display_gantt_chart(project, label=None):
     # Show the plot
     plt.tight_layout()
     plt.show(block=False)
+
+
+
+
