@@ -151,102 +151,79 @@ def read_projects():
 
     return portfolio
 
-
 def read_inputs(project):
-    """
-    Read input data from Excel files and populate the given project with tasks and resources.
-
-    Args:
-        project (Project): The project object to populate with data.
-
-    Returns:
-        Project: The project with populated tasks and resources.
-    """
     instanceName = project.instanceName
 
-    # Reading resources from the RESOURCES_SHEET_NAME
+    # Reading data from Excel
     resources_df = pd.read_excel(os.path.join(INPUTS_DIR, PORTFOLIO_FILE), sheet_name=RESOURCES_SHEET_NAME)
+    tasks_df = pd.read_excel(os.path.join(INPUTS_DIR, PORTFOLIO_FILE), sheet_name=instanceName, dtype={"ID": str, "Predecessors": str, "Successors": str, "External Predecessors": str}, na_filter=False)
 
-    # Reading tasks from a sheet specific to the project (based on the instanceName)
-    tasks_df = pd.read_excel(os.path.join(INPUTS_DIR, PORTFOLIO_FILE), sheet_name=instanceName, dtype={"ID": str, "Predecessors": str, "Successors": str}, na_filter=False)
-
-    # Create a dictionary to map task labels to their index
+    # Mapping labels to indices
     task_label_to_index = {label: idx for idx, label in enumerate(tasks_df["ID"])}
-    
-    # Create a dictionary to map resource labels to their index
     resource_label_to_index = {row['ID']: i for i, row in resources_df.iterrows()}
 
-    # Create list of task objects
+    def process_task_relations(task_string, is_external=False):
+        relations = {}
+        for task in task_string.split(";"):
+            if task:
+                fc_index = task.find("FC")
+                cc_index = task.find("CC")
+
+                if fc_index != -1:
+                    label = task[:fc_index]
+                    lag = int(task[fc_index + 3:])
+                elif cc_index != -1:
+                    label = task[:cc_index]
+                    lag = -int(task[cc_index + 3:])
+                else:
+                    label = task
+                    lag = 0
+
+                if is_external:
+                    proj_id, label = label.split("-")
+                    key = f"{proj_id}-{label}"
+                    relations[key] = lag
+                else:
+                    task_id = task_label_to_index[label]
+                    relations[task_id] = lag
+        return relations
+
     tasks = []
     for i, row in tasks_df.iterrows():
-        predecessors = {}
-        successors = {}
-        resources = {}
-
-        for pred in row['Predecessors'].split(";"):
-            if pred:
-                fc_index = pred.find("FC")
-                cc_index = pred.find("CC")
-                if fc_index != -1:
-                    label = pred[:fc_index]
-                    pred_id = task_label_to_index[label]
-                    predecessors[pred_id] = int(pred[fc_index + 3:])
-                elif cc_index != -1:
-                    label = pred[:cc_index]
-                    pred_id = task_label_to_index[label]
-                    predecessors[pred_id] = -int(pred[cc_index + 3:])
-                else:
-                    pred_id = task_label_to_index[pred]
-                    predecessors[pred_id] = 0
-
-        for succ in row['Successors'].split(";"):
-            if succ:
-                fc_index = succ.find("FC")
-                cc_index = succ.find("CC")
-                if fc_index != -1:
-                    label = succ[:fc_index]
-                    succ_id = task_label_to_index[label]
-                    successors[succ_id] = int(succ[fc_index + 3:])
-                elif cc_index != -1:
-                    label = succ[:cc_index]
-                    succ_id = task_label_to_index[label]
-                    successors[succ_id] = -int(succ[cc_index + 3:])
-                else:
-                    succ_id = task_label_to_index[succ]
-                    successors[succ_id] = 0
+        predecessors = process_task_relations(row['Predecessors'])
+        successors = process_task_relations(row['Successors'])
+        external_predecessors = process_task_relations(row['External Predecessors'], is_external=True)
         
         # Adjusting how resources are assigned to tasks
-        for j, (col_name, res) in enumerate(row.items()):
-            if j >= 6 and res:
+        resources = {}
+        excluded_cols = ["ID", "Section", "Name", "Duration", "Predecessors", "Successors", "External Predecessors"]
+        for col_name, res in row.items():
+            if col_name not in excluded_cols and res:
                 try:
                     resource_id = resource_label_to_index[col_name]
                     resources[resource_id] = float(res)
                 except ValueError:
                     raise ValueError(f"Invalid resource value '{res}' for task {row['ID']} in resource column {col_name}. Expected a numeric value.")
 
-        task = Task(i, row['ID'], row['Name'], row['Duration'], predecessors, successors, resources, project)
+        task = Task(i, row['ID'], row['Name'], row['Duration'], predecessors, external_predecessors, successors, resources, project)
         adjust_task_dates_by_offset(task, project.start_offset)
         tasks.append(task)
 
-    # Create list of resource objects
-    resources_list = []
-    for i, row in resources_df.iterrows():
-        resource = Resource(i, row['ID'], row['Name'], row['Type'], row['Units'])
-        resources_list.append(resource)
+    resources_list = [Resource(i, row['ID'], row['Name'], row['Type'], row['Units']) for i, row in resources_df.iterrows()]
 
     # Check if any task demands more units of a resource than its total capacity
     resources_availability = {resource.id: resource.units for resource in resources_list}
     for task in tasks:
         for resource_id, units in task.resources.items():
             if units > resources_availability[resource_id]:
-                resource_label = resources_list[resource_id].name   # Fetching the name attribute from the Resource object
+                resource_label = resources_list[resource_id].name
                 raise ValueError(f"Project {instanceName} - Task {task.label} {task.name} demands {units} units of resource {resource_label}, but only {resources_availability[resource_id]} units are available.")
 
-    # Append tasks and resources to the given project.
     project.tasks.extend(tasks)
     project.resources.extend(resources_list)
 
     return project
+
 
 
 def combine_projects(portfolio):
@@ -554,7 +531,7 @@ def network_diagram(project):
         Solution: The solution representing the network diagram.
     """
     solution = Solution()
-    
+
     # Topologically sort the tasks. A topological sort is an algorithm that takes a directed
     # graph and returns a linear ordering of its vertices (nodes) such that, for every
     # directed edge (u, v) from vertex u to vertex v, u comes before v in the ordering
@@ -582,7 +559,6 @@ def network_diagram(project):
  
     # Sort tasks by label, for better intrepretation at the output
     solution.tasks.sort(key=lambda task: int(task.id))
-
     solution.time = task.finish_time
     return solution
 

@@ -89,6 +89,7 @@ class Task:
         name (str): Name or title of the task.
         duration (int): Time required to complete the task.
         predecessors (dict): Maps predecessor task IDs to time offsets.
+        external_predecessors (dict): Maps external predecessor task IDs to time offsets.
         successors (dict): Maps successor task IDs to time offsets.
         resources (dict): Maps resource IDs to required number of units.
         start_time (int): Start time of the task, in days, wrt portfolio start
@@ -97,12 +98,13 @@ class Task:
         start_date (str): Absolute start calendar date
         finish_date (str): Absolute finish calendar date
     """
-    def __init__(self, id, label, name, duration, predecessors, successors, resources, project=None):
+    def __init__(self, id, label, name, duration, predecessors, external_predecessors, successors, resources, project=None):
         self.id = id
         self.label = label
         self.name = name
         self.duration = duration
         self.predecessors = predecessors
+        self.external_predecessors = external_predecessors
         self.successors = successors
         self.resources = resources
         self.start_time = 0
@@ -113,14 +115,15 @@ class Task:
 
     def __repr__(self):
         predecessor_labels = ", ".join(str(label) for label in self.predecessors.keys())
+        external_predecessor_labels = ", ".join(str(label) for label in self.external_predecessors.keys())
         successors_labels = ", ".join(str(label) for label in self.successors.keys())
         return (f"Task(ID: {self.id}, Label: {self.label}, "#Name: {self.name}, "
                 f"Duration: {self.duration}, Start time: {self.start_time}, "
                 f"End time: {self.finish_time}, Project: {self.project.instanceName if self.project else 'None'}, "
                 f"Start date: {self.start_date}, Finish date: {self.finish_date}, "
                 f"Predecessors IDs: [{predecessor_labels}]), "
+                f"External Predecessors IDs: [{external_predecessor_labels}]), "
                 f"Successors IDs: [{successors_labels}])\n")
-
 
 
 class Resource:
@@ -164,7 +167,7 @@ class Solution:
 
     def to_project(self, original_project):
         # Generate tasks from the solution's tasks
-        solved_tasks = [Task(task.id, task.label, task.name, task.duration, task.predecessors, 
+        solved_tasks = [Task(task.id, task.label, task.name, task.duration, task.predecessors, task.external_predecessors,
                              task.successors, task.resources, task.project) 
                         for task in self.tasks]
         
@@ -180,7 +183,9 @@ class Solution:
         
         # Assign the new list of tasks to the project
         solved_project.tasks = solved_tasks
+
         # Copy the resources from the original project to the solved project
         solved_project.resources = original_project.resources.copy()
 
         return solved_project
+

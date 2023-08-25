@@ -5,7 +5,7 @@ from utils import display_gantt_chart, project_to_df, write_solutions_to_excel, 
 import copy
 import logging
 import matplotlib.pyplot as plt
-
+import sys, os
 
 def main_independentprojects():
     """
@@ -17,7 +17,7 @@ def main_independentprojects():
 
     Returns: None
     """
-
+    os.system('cls')
 
     # Read projects from the file
     portfolio = read_projects()
@@ -30,16 +30,17 @@ def main_independentprojects():
         # Read inputs (tasks and resources) for one project
         original_project = read_inputs(project)
         
-        # Make a deep copy for TORA
-        project_for_tora = copy.deepcopy(original_project)
-        # Calculate solution for the given scenario
-        solution_constrained = TORA_Heuristic(project_for_tora)
-        solved_constrained_project = solution_constrained.to_project(project_for_tora)
-        set_project_task_dates(solved_constrained_project, portfolio.start_date)
+        # # Make a deep copy for TORA
+        # project_for_tora = copy.deepcopy(original_project)
 
-        df_constrained = project_to_df(solved_constrained_project)
-        dfs.append(df_constrained)
-        sheet_names.append(project.instanceName + "_Constrained")
+        # # Calculate solution for the given scenario
+        # solution_constrained = TORA_Heuristic(project_for_tora)
+        # solved_constrained_project = solution_constrained.to_project(project_for_tora)
+        # set_project_task_dates(solved_constrained_project, portfolio.start_date)
+
+        # df_constrained = project_to_df(solved_constrained_project)
+        # dfs.append(df_constrained)
+        # sheet_names.append(project.instanceName + "_Constrained")
 
         # Make another deep copy for the network diagram
         project_for_nd = copy.deepcopy(original_project)
@@ -67,6 +68,7 @@ def main_joinprojects():
 
     Returns: None
     """
+    os.system('cls')
 
     # Read projects from the file
     portfolio = read_projects()
@@ -89,7 +91,7 @@ def main_joinprojects():
     project_for_tora = copy.deepcopy(original_combined_project)
     solution_constrained = TORA_Heuristic(project_for_tora)
     solved_constrained_project = solution_constrained.to_project(project_for_tora)
-
+ 
     # Decompose the TORA-processed combined project and set dates
     decomposed_projects_constrained = decompose_project(solved_constrained_project, portfolio.projects)
     for project in decomposed_projects_constrained:
@@ -112,7 +114,7 @@ def main_joinprojects():
         dfs.append(df_constrained)
         log_project_penalty(project)
         sheet_names.append(project.instanceName + "_Constrained")
-        display_gantt_chart(project, "Constrained Resources")
+        #display_gantt_chart(project, "Constrained Resources")
 
     
     logging.info("\nPossible penalties in Not Constrained projects:")
@@ -121,13 +123,13 @@ def main_joinprojects():
         dfs.append(df_not_constrained)
         log_project_penalty(project)
         sheet_names.append(project.instanceName + "_notConstrained")
-        display_gantt_chart(project, "Not-Constrained Resources")
+        #display_gantt_chart(project, "Not-Constrained Resources")
 
     # Write all dataframes to a single Excel file with different sheets
     write_solutions_to_excel(dfs, sheet_names)
 
     # Block Gantt Charts until user closes them
-    plt.show()
+    #plt.show()
 
 if __name__ == "__main__":
     main_joinprojects()
