@@ -1,20 +1,19 @@
 
 Delays in tasks due to collision of resources:
-- Task '3' from project 'P1' has been delayed by 80 days due to insufficient availability of resource 'R1'.
-- Task '4' from project 'P1' has been delayed by 160 days due to insufficient availability of resource 'R1'.
-- Task '2' from project 'P2' has been delayed by 235 days due to insufficient availability of resource 'R1'.
-- Task '3' from project 'P2' has been delayed by 315 days due to insufficient availability of resource 'R1'.
-- Task '4' from project 'P2' has been delayed by 395 days due to insufficient availability of resource 'R1'.
-- Task '2' from project 'P3' has been delayed by 470 days due to insufficient availability of resource 'R1'.
-- Task '3' from project 'P3' has been delayed by 550 days due to insufficient availability of resource 'R1'.
-- Task '4' from project 'P3' has been delayed by 630 days due to insufficient availability of resource 'R1'.
+- Task '4' from project 'P1' has been delayed by 80 days due to insufficient availability of resource 'R1'.
+- Task '2' from project 'P2' has been delayed by 160 days due to insufficient availability of resource 'R1'.
+- Task '3' from project 'P2' has been delayed by 240 days due to insufficient availability of resource 'R1'.
+- Task '4' from project 'P2' has been delayed by 320 days due to insufficient availability of resource 'R1'.
+- Task '2' from project 'P3' has been delayed by 400 days due to insufficient availability of resource 'R1'.
+- Task '3' from project 'P3' has been delayed by 480 days due to insufficient availability of resource 'R1'.
+- Task '4' from project 'P3' has been delayed by 560 days due to insufficient availability of resource 'R1'.
 
 Possible penalties in Constrained projects:
-- Project 'P1' was delivered on time on 19-08-2024. There is no penalty.
-- Project 'P2' was delivered on time on 21-07-2025. There is no penalty.
-- Project 'P3' was delivered on time on 22-06-2026. There is no penalty.
+- Project 'P1' was delivered late by 122 labor days, on 22-06-2026. The deadline was 01-01-2026. The total penalty is 61.0 k$.
+- Project 'P2' was delivered on time on 31-03-2025. There is no penalty.
+- Project 'P3' was delivered on time on 02-03-2026. There is no penalty.
 
 Possible penalties in Not Constrained projects:
-- Project 'P1' was delivered on time on 08-01-2024. There is no penalty.
-- Project 'P2' was delivered on time on 15-01-2024. There is no penalty.
-- Project 'P3' was delivered on time on 22-01-2024. There is no penalty.
+- Project 'P1' was delivered on time on 29-04-2024. There is no penalty.
+- Project 'P2' was delivered on time on 08-01-2024. There is no penalty.
+- Project 'P3' was delivered on time on 08-01-2024. There is no penalty.

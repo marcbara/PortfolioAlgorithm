@@ -1,7 +1,7 @@
 from utils import read_projects, read_inputs 
 from utils import TORA_Heuristic, network_diagram, set_project_task_dates
 from utils import combine_projects, decompose_project
-from utils import display_gantt_chart, project_to_df, write_solutions_to_excel, log_project_penalty
+from utils import display_gantt_chart, project_to_df, write_solutions_to_excel, log_project_penalty, adjust_external_predecessors_and_successors
 import copy
 import logging
 import matplotlib.pyplot as plt
@@ -89,6 +89,7 @@ def main_joinprojects():
 
     # Process the combined project with TORA
     project_for_tora = copy.deepcopy(original_combined_project)
+    adjust_external_predecessors_and_successors(project_for_tora.tasks)
     solution_constrained = TORA_Heuristic(project_for_tora)
     solved_constrained_project = solution_constrained.to_project(project_for_tora)
  
@@ -99,6 +100,7 @@ def main_joinprojects():
 
     # Process the combined project with the network diagram
     project_for_nd = copy.deepcopy(original_combined_project)
+    adjust_external_predecessors_and_successors(project_for_nd.tasks)
     solution_nd = network_diagram(project_for_nd)
     solved_notconstrained_project = solution_nd.to_project(project_for_nd)
 
@@ -114,7 +116,7 @@ def main_joinprojects():
         dfs.append(df_constrained)
         log_project_penalty(project)
         sheet_names.append(project.instanceName + "_Constrained")
-        #display_gantt_chart(project, "Constrained Resources")
+        display_gantt_chart(project, "Constrained Resources")
 
     
     logging.info("\nPossible penalties in Not Constrained projects:")
@@ -123,13 +125,13 @@ def main_joinprojects():
         dfs.append(df_not_constrained)
         log_project_penalty(project)
         sheet_names.append(project.instanceName + "_notConstrained")
-        #display_gantt_chart(project, "Not-Constrained Resources")
+        display_gantt_chart(project, "Not-Constrained Resources")
 
     # Write all dataframes to a single Excel file with different sheets
     write_solutions_to_excel(dfs, sheet_names)
 
     # Block Gantt Charts until user closes them
-    #plt.show()
+    plt.show()
 
 if __name__ == "__main__":
     main_joinprojects()

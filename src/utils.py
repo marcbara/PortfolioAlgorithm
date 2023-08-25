@@ -316,6 +316,24 @@ def log_project_penalty(project):
     # Log the report using the logging module
     logging.info(report)
 
+def get_external_predecessor_notation(project_name, task_label, lag):
+    """
+    Get the notation for an external predecessor task, including any extra time.
+
+    Args:
+        project_name (str): The name of the project the task belongs to.
+        task_label (str): The label of the predecessor task.
+        lag (int): The extra time for the predecessor task.
+
+    Returns:
+        str: The notation for the external predecessor task with extra time.
+    """
+    if lag == 0:
+        return f"{project_name}-{task_label}"
+    elif lag > 0:
+        return f"{project_name}-{task_label}FC+{lag}"
+    else:
+        return f"{project_name}-{task_label}FC{lag}"  # since lag is negative, no need for additional '-'
 
 def project_to_df(project):
     """
@@ -346,10 +364,13 @@ def project_to_df(project):
     successors_data = []
     for task in project.tasks:
         # Use the task_map to look up tasks by ID
-        pred_data = [get_predecessor_notation(task_map[pred].label, extra_time) for pred, extra_time in task.predecessors.items() if pred in task_map]
-        succ_data = [get_predecessor_notation(task_map[succ].label, extra_time) for succ, extra_time in task.successors.items() if succ in task_map]
-        predecessors_data.append(", ".join(pred_data))
-        successors_data.append(", ".join(succ_data))
+        pred_data = [get_predecessor_notation(task_map[pred].label, lag) for pred, lag in task.predecessors.items() if pred in task_map]
+        # Split the combined project_name-label string into separate project_name and task_label
+        ext_pred_data = [get_external_predecessor_notation(project_name_label.split("-")[0], project_name_label.split("-")[1], lag) for project_name_label, lag in task.external_predecessors.items()]
+        pred_data.extend(ext_pred_data)
+        succ_data = [get_predecessor_notation(task_map[succ].label, lag) for succ, lag in task.successors.items() if succ in task_map]
+        predecessors_data.append("; ".join(pred_data))
+        successors_data.append("; ".join(succ_data))
 
     # Add predecessors and successors data to the DataFrame
     data["Predecessors"] = predecessors_data
@@ -357,6 +378,10 @@ def project_to_df(project):
 
     df = pd.DataFrame(data)
     return df
+
+
+
+
 
 
 def write_solutions_to_excel(dfs, sheet_names):
@@ -376,23 +401,23 @@ def write_solutions_to_excel(dfs, sheet_names):
             df.to_excel(writer, sheet_name=sheet_name, index=False)
 
 
-def get_predecessor_notation(task_label, extra_time):
+def get_predecessor_notation(task_label, lag):
     """
     Get the notation for a predecessor task, including any extra time.
 
     Args:
         task_label (str): The label of the predecessor task.
-        extra_time (int): The extra time for the predecessor task.
+        lag (int): The extra time for the predecessor task.
 
     Returns:
         str: The notation for the predecessor task with extra time.
     """
-    if extra_time == 0:
+    if lag == 0:
         return task_label
-    elif extra_time > 0:
-        return f"{task_label}FC+{extra_time}"
+    elif lag > 0:
+        return f"{task_label}FC+{lag}"
     else:
-        return f"{task_label}FC-{extra_time}"
+        return f"{task_label}FC-{lag}"
 
 
 def topological_sort(tasks):
@@ -407,8 +432,10 @@ def topological_sort(tasks):
     """
     # Create a dictionary to store the number of incoming edges for each task
     in_degree = {task.id: len(task.predecessors) for task in tasks}
+
     # Initialize the queue with the tasks that have no incoming edges
     queue = [task for task in tasks if in_degree[task.id] == 0]
+
     # Perform topological sorting
     sorted_tasks = []
     # while queue is not empty
@@ -460,14 +487,14 @@ def TORA_Heuristic(project):
     for task in sorted_tasks:
         # Calculate earliest start time for task considering predecessor dependencies
         earliest_start_time = task.start_time # Use the task's current start time as the base
-        for pred_id, extra_time in task.predecessors.items():
+        for pred_id, lag in task.predecessors.items():
             pred_task = project.tasks[pred_id]
-            if extra_time >= 0:
+            if lag >= 0:
                 # Add extra time to the ending time of predecessor
-                earliest_start_time = max(earliest_start_time, pred_task.finish_time + extra_time)
+                earliest_start_time = max(earliest_start_time, pred_task.finish_time + lag)
             else:
                 # Add extra time to the starting time of predecessor
-                earliest_start_time = max(earliest_start_time, pred_task.start_time + abs(extra_time))
+                earliest_start_time = max(earliest_start_time, pred_task.start_time + abs(lag))
 
         # Refine earliest start time for task considering resource availability
         for resource_id, units in task.resources.items():
@@ -541,14 +568,14 @@ def network_diagram(project):
     for task in sorted_tasks:
         # Calculate earliest start time for task considering predecessor dependencies
         earliest_start_time = task.start_time # Use the task's current start time as the base
-        for pred_id, extra_time in task.predecessors.items():
+        for pred_id, lag in task.predecessors.items():
             pred_task = project.tasks[pred_id]
-            if extra_time >= 0:
+            if lag >= 0:
                 # Add extra time to the ending time of predecessor
-                earliest_start_time = max(earliest_start_time, pred_task.finish_time + extra_time)
+                earliest_start_time = max(earliest_start_time, pred_task.finish_time + lag)
             else:
                 # Add extra time to the starting time of predecessor
-                earliest_start_time = max(earliest_start_time, pred_task.start_time + abs(extra_time))
+                earliest_start_time = max(earliest_start_time, pred_task.start_time + abs(lag))
         
         # Update finish time of task
         task.start_time = earliest_start_time
@@ -561,6 +588,7 @@ def network_diagram(project):
     solution.tasks.sort(key=lambda task: int(task.id))
     solution.time = task.finish_time
     return solution
+
 
 def display_gantt_chart(project, label=None):
 
@@ -619,4 +647,19 @@ def display_gantt_chart(project, label=None):
 
 
 
-
+def adjust_external_predecessors_and_successors(tasks):
+    # Create a mapping from project-label to task ID
+    project_label_to_id = {(task.project.instanceName, task.label): task.id for task in tasks}
+    
+    # Iterate through tasks and adjust external predecessors
+    for task in tasks:
+        for ext_pred_key, lag in task.external_predecessors.items():
+            project_name, label = ext_pred_key.split('-')
+            corresponding_task_id = project_label_to_id.get((project_name, label))
+            if corresponding_task_id is not None:
+                # Add to the predecessors attribute without removing it from external_predecessors
+                task.predecessors[corresponding_task_id] = lag
+                
+                # Add the current task as a successor to the corresponding predecessor task
+                pred_task = tasks[corresponding_task_id]
+                pred_task.successors[task.id] = lag

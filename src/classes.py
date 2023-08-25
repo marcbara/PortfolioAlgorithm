@@ -121,8 +121,8 @@ class Task:
                 f"Duration: {self.duration}, Start time: {self.start_time}, "
                 f"End time: {self.finish_time}, Project: {self.project.instanceName if self.project else 'None'}, "
                 f"Start date: {self.start_date}, Finish date: {self.finish_date}, "
-                f"Predecessors IDs: [{predecessor_labels}]), "
-                f"External Predecessors IDs: [{external_predecessor_labels}]), "
+                f"Predecessors IDs: [{predecessor_labels}], "
+                f"External Predecessors IDs: [{external_predecessor_labels}], "
                 f"Successors IDs: [{successors_labels}])\n")
 
 
