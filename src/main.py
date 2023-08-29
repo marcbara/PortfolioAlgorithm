@@ -144,11 +144,12 @@ def main_jointprojects():
     # Write all dataframes to a single Excel file with different sheets
     write_solutions_to_excel(dfs, sheet_names)
 
-    # Block Gantt Charts until user closes them
-    plt.show()
-
+    # Report with ChatGPT
     if read_secret_files:
         report_with_chatgpt(log_filename, AI_insights_filename)
+
+    # Block Gantt Charts until user closes them
+    plt.show()
 
 if __name__ == "__main__":
     main_jointprojects()
