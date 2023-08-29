@@ -1,0 +1,68 @@
+Portfolio Manager Report:
+
+This report provides an analysis of project performance under two scenarios in terms of resource constraints. The first scenario involves projects operating under resource constraints, while the second scenario assumes resources were not limiting factors. By comparing the two scenarios, we can gain insights into the impact of resource constraints on project delivery and identify areas where resource allocation could be improved.
+
+1. Delays in tasks due to resource collisions:
+
+The following tasks experienced delays due to insufficient availability of specific resources in the constrained scenario:
+
+- Task '5' from project 'P3' was delayed by 45 days due to insufficient availability of resource 'R1'.
+- Task '6' from project 'P1' was delayed by 75 days due to insufficient availability of resource 'R1'.
+- Task '7' from project 'P1' was delayed by 8 days due to insufficient availability of resource 'R1'.
+- Task '8' from project 'P1' was delayed by 16 days due to insufficient availability of resource 'R1'.
+- Task '9' from project 'P1' was delayed by 24 days due to insufficient availability of resource 'R1'.
+- Task '8' from project 'P2' was delayed by 15 days due to insufficient availability of resource 'R1'.
+- Task '7' from project 'P3' was delayed by 37 days due to insufficient availability of resource 'R1'.
+- Task '12' from project 'P1' was delayed by 25 days due to insufficient availability of resource 'R10'.
+- Task '9' from project 'P2' was delayed by 8 days due to insufficient availability of resource 'R1'.
+- Task '8' from project 'P3' was delayed by 20 days due to insufficient availability of resource 'R1'.
+- Task '11' from project 'P2' was delayed by 30 days due to insufficient availability of resource 'R10'.
+- Task '12' from project 'P2' was delayed by 60 days due to insufficient availability of resource 'R10'.
+- Task '14' from project 'P2' was delayed by 30 days due to insufficient availability of resource 'R11'.
+- Task '15' from project 'P2' was delayed by 95 days due to insufficient availability of resource 'R11'.
+- Task '14' from project 'P1' was delayed by 165 days due to insufficient availability of resource 'R12'.
+- Task '9' from project 'P3' was delayed by 157 days due to insufficient availability of resource 'R12'.
+- Task '13' from project 'P3' was delayed by 75 days due to insufficient availability of resource 'R10'.
+- Task '53' from project 'P1' was delayed by 284 days due to insufficient availability of resource 'R9'.
+
+2. Projects under resource constraints:
+
+Under resource constraints, the projects faced challenges in meeting deadlines, resulting in penalties. The details of the projects are as follows:
+
+- Project 'P1' was delivered late by 109 labor days, on 03-06-2026. The initial deadline was 01-01-2026. The total penalty incurred is 54.5 k$.
+  - Construction phase: Initial date: 22-05-2024, End date: 27-05-2026. Duration: 525 labor days.
+
+- Project 'P2' was delivered late by 104 labor days, on 27-05-2026. The initial deadline was 01-01-2026. The total penalty incurred is 72.8 k$.
+  - Construction phase: Initial date: 23-01-2025, End date: 20-05-2026. Duration: 344 labor days.
+
+- Project 'P3' was delivered late by 351 labor days, on 08-05-2028. The initial deadline was 01-01-2027. The total penalty incurred is 315.9 k$.
+  - Construction phase: Initial date: 20-05-2025, End date: 25-02-2028. Duration: 723 labor days.
+
+3. Projects not constrained by resources:
+
+In the scenario where resources were not limiting factors, the projects delivered within or near their deadlines. The penalty details and project duration are as follows:
+
+- Project 'P1' was delivered on time on 12-08-2024, with no penalty incurred.
+  - Construction phase: Initial date: 04-01-2024, End date: 05-08-2024. Duration: 152 labor days.
+
+- Project 'P2' was delivered on time on 12-12-2025, with no penalty incurred.
+  - Construction phase: Initial date: 12-08-2024, End date: 05-12-2025. Duration: 344 labor days.
+
+- Project 'P3' was delivered late by 92 labor days, on 11-05-2027. The initial deadline was 01-01-2027. The total penalty incurred is 82.8 k$.
+  - Construction phase: Initial date: 22-05-2024, End date: 01-03-2027. Duration: 723 labor days.
+
+Insights and Recommendations:
+
+1. Resource 'R1' and 'R10' have consistently caused delays across multiple projects. Increasing their availability should be a priority to mitigate these delays effectively.
+
+2. Resource 'R9' and 'R12' have resulted in significant delays for specific tasks and projects. Increasing their availability can help reduce these delays and improve overall project performance.
+
+3. Consider optimizing resource allocation and scheduling to minimize collisions and ensure efficient utilization of resources. This may involve reassessing task dependencies, resource allocations, and capacity planning.
+
+4. Conduct regular resource availability assessments and capacity planning to identify potential bottlenecks and proactively adjust resource allocations to meet project demands.
+
+5. Continuously monitor and analyze project performance under resource constraints to identify patterns and trends. This can help refine resource allocation strategies and improve future project planning.
+
+By addressing the identified resource constraints and implementing the recommended actions, the portfolio can expect to improve project delivery timelines, minimize penalties, and enhance overall portfolio performance.
+
+Note: This report is based on the provided data and assumptions. Further analysis and collaboration with project managers and stakeholders are encouraged to ensure accurate resource planning and scheduling.

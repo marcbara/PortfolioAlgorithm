@@ -3,6 +3,7 @@ from utils import TORA_Heuristic, network_diagram, set_project_task_dates
 from utils import combine_projects, decompose_project
 from utils import display_gantt_chart, project_to_df, write_solutions_to_excel, log_project_penalty, adjust_external_predecessors_and_successors
 from utils import check_task_consistency, log_construction_duration
+from utils import report_with_chatgpt, log_filename, AI_insights_filename, read_secret_files
 import copy
 import logging
 import matplotlib.pyplot as plt
@@ -145,6 +146,9 @@ def main_jointprojects():
 
     # Block Gantt Charts until user closes them
     #plt.show()
+
+    if read_secret_files:
+        report_with_chatgpt(log_filename, AI_insights_filename)
 
 if __name__ == "__main__":
     main_jointprojects()

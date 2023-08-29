@@ -7,6 +7,7 @@ import logging
 import copy
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
+import openai
 
 
 # Get the directory of the currently executing script
@@ -22,6 +23,14 @@ read_files = config.read(config_file_path)
 if not read_files:
     print("Failed to read the config.ini file.")
 
+secret_config = CaseSensitiveConfigParser()
+read_secret_files = secret_config.read(os.path.join(current_directory, 'secrets.ini'))
+if not read_secret_files:
+    print("Failed to read the secrets.ini file.")
+
+openai.api_key = secret_config.get("secrets", "openai_api_key")
+
+
 # Adjust directory paths to be absolute paths relative to the current_directory
 OUTPUTS_DIR = os.path.join(current_directory, config['PATHS']['OUTPUTS_DIR'])
 INPUTS_DIR = os.path.join(current_directory, config['PATHS']['INPUTS_DIR'])
@@ -34,8 +43,8 @@ PORTFOLIO_FILE = config['PATHS']['PORTFOLIO_FILE']
 portfolio_file_basename = os.path.basename(PORTFOLIO_FILE)
 portfolio_name, _ = os.path.splitext(portfolio_file_basename)
 log_filename = os.path.join(OUTPUTS_DIR, f"{portfolio_name}_log.txt")
+AI_insights_filename = os.path.join(OUTPUTS_DIR, f"{portfolio_name}_AI_insights.txt")
 logging.basicConfig(filename=log_filename, level=logging.INFO, format='%(message)s', filemode='w')
-
 
 
 def get_earliest_date(dates):
@@ -777,3 +786,31 @@ def check_task_consistency(project):
 
 
 
+
+def report_with_chatgpt(input_filename, output_filename, model="gpt-3.5-turbo"):
+
+    with open(input_filename, 'r') as file:
+        text = file.read()
+
+    prompt = (
+        "I have this report from my Project Management System. The report compares the same projects under two scenarios: "
+        "constrained projects means that resources are shared and may induce delays, and not constrained means that resources "
+        "collisions haven't been taking into account when building schedules. Please write a report from these data, as if "
+        "you were a Portfolio manager. Avoid introductions. Take into account that resource-constrained and not constrained "
+        "are the same projects (P1, P2..) but under constraints or not, so you can compare P1 constrained vs not constrained "
+        "for example, because it's the same project. Please give your insights about which resource should be increased for "
+        "maximum benefit. This is the report: " 
+        + text
+)
+
+    messages = [{"role": "user", "content": prompt}]
+
+    response = openai.ChatCompletion.create(
+        model=model,
+        messages=messages,
+        temperature=1,
+    )
+
+    with open(output_filename, 'w') as file:
+        file.write(response.choices[0].message["content"])
+    
