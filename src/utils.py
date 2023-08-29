@@ -796,12 +796,12 @@ def report_with_chatgpt(input_filename, output_filename, model="gpt-3.5-turbo"):
         "I have this report from my Project Management System. The report compares the same projects under two scenarios: "
         "constrained projects means that resources are shared and may induce delays, and not constrained means that resources "
         "collisions haven't been taking into account when building schedules. Please write a report from these data, as if "
-        "you were a Portfolio manager. Avoid introductions. Take into account that resource-constrained and not constrained "
-        "are the same projects (P1, P2..) but under constraints or not, so you can compare P1 constrained vs not constrained "
-        "for example, because it's the same project. Please give your insights about which resource should be increased for "
+        "you were a Portfolio manager. Take into account that resource-constrained and not constrained "
+        "are the same projects (P1, P2..) but under constraints or not, so you can compare P1 constrained vs not constrained, "
+        "because it's the same project. Please give your insights about which resource should be increased for "
         "maximum benefit. This is the report: " 
         + text
-)
+    )
 
     messages = [{"role": "user", "content": prompt}]
 
@@ -813,4 +813,5 @@ def report_with_chatgpt(input_filename, output_filename, model="gpt-3.5-turbo"):
 
     with open(output_filename, 'w') as file:
         file.write(response.choices[0].message["content"])
-    
+
+

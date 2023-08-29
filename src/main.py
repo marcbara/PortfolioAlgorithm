@@ -7,7 +7,7 @@ from utils import report_with_chatgpt, log_filename, AI_insights_filename, read_
 import copy
 import logging
 import matplotlib.pyplot as plt
-import sys, os
+import os
 
 def main_independentprojects():
     """
@@ -129,7 +129,7 @@ def main_jointprojects():
         log_project_penalty(project)
         log_construction_duration(project)
         sheet_names.append(project.instanceName + "_Constrained")
-        #display_gantt_chart(project, "Constrained Resources")
+        display_gantt_chart(project, "Constrained Resources")
 
     
     logging.info("\nReport of Projects not constrained by resources (as if resources were not limiting):")
@@ -139,13 +139,13 @@ def main_jointprojects():
         log_project_penalty(project)
         log_construction_duration(project)
         sheet_names.append(project.instanceName + "_notConstrained")
-        #display_gantt_chart(project, "Not-Constrained Resources")
+        display_gantt_chart(project, "Not-Constrained Resources")
 
     # Write all dataframes to a single Excel file with different sheets
     write_solutions_to_excel(dfs, sheet_names)
 
     # Block Gantt Charts until user closes them
-    #plt.show()
+    plt.show()
 
     if read_secret_files:
         report_with_chatgpt(log_filename, AI_insights_filename)
