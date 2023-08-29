@@ -2,7 +2,7 @@ from utils import read_projects, read_inputs
 from utils import TORA_Heuristic, network_diagram, set_project_task_dates
 from utils import combine_projects, decompose_project
 from utils import display_gantt_chart, project_to_df, write_solutions_to_excel, log_project_penalty, adjust_external_predecessors_and_successors
-from utils import check_task_consistency
+from utils import check_task_consistency, log_construction_duration
 import copy
 import logging
 import matplotlib.pyplot as plt
@@ -62,7 +62,7 @@ def main_independentprojects():
     # Write all dataframes to a single Excel file with different sheets
     write_solutions_to_excel(dfs, sheet_names)
 
-def main_joinprojects():
+def main_jointprojects():
     """
     The function `main_joinprojects()` reads input projects from a file, combines them, processes them with
     TORA (Task Ordering and Resource Allocation), Network Diagram algorithm and generates decomposed
@@ -121,28 +121,30 @@ def main_joinprojects():
         set_project_task_dates(project, portfolio.start_date)
 
     # Convert each decomposed project to a dataframe and add to the lists
-    logging.info("\nPossible penalties in Constrained projects:")
+    logging.info("\nReport of Constrained projects:")
     for project in decomposed_projects_constrained:
         df_constrained = project_to_df(project)
         dfs.append(df_constrained)
         log_project_penalty(project)
+        log_construction_duration(project)
         sheet_names.append(project.instanceName + "_Constrained")
-        display_gantt_chart(project, "Constrained Resources")
+        #display_gantt_chart(project, "Constrained Resources")
 
     
-    logging.info("\nPossible penalties in Not Constrained projects:")
+    logging.info("\nReport of Not Constrained projects:")
     for project in decomposed_projects_notconstrained:
         df_not_constrained = project_to_df(project)
         dfs.append(df_not_constrained)
         log_project_penalty(project)
+        log_construction_duration(project)
         sheet_names.append(project.instanceName + "_notConstrained")
-        display_gantt_chart(project, "Not-Constrained Resources")
+        #display_gantt_chart(project, "Not-Constrained Resources")
 
     # Write all dataframes to a single Excel file with different sheets
     write_solutions_to_excel(dfs, sheet_names)
 
     # Block Gantt Charts until user closes them
-    plt.show()
+    #plt.show()
 
 if __name__ == "__main__":
-    main_joinprojects()
+    main_jointprojects()

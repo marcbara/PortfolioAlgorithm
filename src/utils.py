@@ -151,12 +151,37 @@ def read_projects():
 
     return portfolio
 
+
 def read_inputs(project):
+    """
+    Reads project tasks and resources data from an Excel file and populates the given project instance.
+    
+    This function expects the Excel file to have specific sheets and columns layout:
+    - Resources data should be in a sheet named by the value in `RESOURCES_SHEET_NAME`.
+    - Tasks data should be in a sheet named by the project's `instanceName`.
+
+    The function processes tasks' relations, resources assignments, and checks resources' availability.
+    Invalid or inconsistent inputs will raise a ValueError.
+    
+    Args:
+        project (Project): The project instance to be populated with tasks and resources.
+        
+    Returns:
+        Project: The populated project instance.
+    
+    Raises:
+        ValueError: If there's an inconsistency in resources' assignment or if any task demands more units 
+                   of a resource than its total capacity.
+                   
+    Notes:
+        The Excel file's path is constructed using `INPUTS_DIR` and `PORTFOLIO_FILE` constants.
+        The function expects certain column names in the Excel sheets, and any deviations may lead to errors.
+    """
     instanceName = project.instanceName
 
     # Reading data from Excel
     resources_df = pd.read_excel(os.path.join(INPUTS_DIR, PORTFOLIO_FILE), sheet_name=RESOURCES_SHEET_NAME)
-    tasks_df = pd.read_excel(os.path.join(INPUTS_DIR, PORTFOLIO_FILE), sheet_name=instanceName, dtype={"ID": str, "Predecessors": str, "Successors": str, "External Predecessors": str}, na_filter=False)
+    tasks_df = pd.read_excel(os.path.join(INPUTS_DIR, PORTFOLIO_FILE), sheet_name=instanceName, dtype={"ID": str, "Predecessors": str, "Successors": str, "External Predecessors": str, "Section": str}, na_filter=False)
 
     # Mapping labels to indices
     task_label_to_index = {label: idx for idx, label in enumerate(tasks_df["ID"])}
@@ -205,7 +230,7 @@ def read_inputs(project):
                 except ValueError:
                     raise ValueError(f"Invalid resource value '{res}' for task {row['ID']} in resource column {col_name}. Expected a numeric value.")
 
-        task = Task(i, row['ID'], row['Name'], row['Duration'], predecessors, external_predecessors, successors, resources, project)
+        task = Task(i, row['ID'], row['Name'], row['Duration'], predecessors, external_predecessors, successors, resources, project, row['Section'])
         adjust_task_dates_by_offset(task, project.start_offset)
         tasks.append(task)
 
@@ -221,7 +246,7 @@ def read_inputs(project):
 
     project.tasks.extend(tasks)
     project.resources.extend(resources_list)
-
+    
     return project
 
 
@@ -309,12 +334,50 @@ def log_project_penalty(project):
         report = (f"- Project '{project.instanceName}' was delivered late by "
                   f"{get_labor_days_difference(datetime.strptime(project.deadline, '%d-%m-%Y').date(), datetime.strptime(delivery_date, '%d-%m-%Y').date())} "
                   f"labor days, on {delivery_date}. The deadline was {project.deadline}. "
-                  f"The total penalty is {penalty:,} k$.")
+                  f"The total penalty is {penalty:,.1f} k$.")
     else:
         report = f"- Project '{project.instanceName}' was delivered on time on {delivery_date}. There is no penalty."
     
     # Log the report using the logging module
     logging.info(report)
+
+
+def log_construction_duration(project):
+    """
+    Log the initial date, end date, and duration in labor days for the "Construction" section of a project.
+    
+    Args:
+        project (Project): The project instance containing tasks.
+        
+    Returns:
+        tuple: A tuple containing the initial date, end date, and duration in labor days for the "Construction" section.
+    """
+    
+    # Filter tasks that belong to the "Construction" section
+    construction_tasks = [task for task in project.tasks if task.section == "Construction"]
+    
+    # If there are no construction tasks, return an appropriate message
+    if not construction_tasks:
+        logging.info("No tasks found for the 'Construction' section in the project.")
+        return None, None, 0
+    
+    # Find the earliest start date and the latest finish date among the construction tasks
+    initial_date = min([datetime.strptime(task.start_date, "%d-%m-%Y") for task in construction_tasks])
+    end_date = max([datetime.strptime(task.finish_date, "%d-%m-%Y") for task in construction_tasks])
+    
+    # Calculate the construction duration in labor days
+    construction_duration = get_labor_days_difference(initial_date, end_date)
+    
+    # Log the results
+    report = (f"- Project '{project.instanceName}' Construction phase: "
+        f"Initial date: {initial_date.strftime('%d-%m-%Y')}, End date: {end_date.strftime('%d-%m-%Y')}. Duration: {construction_duration} labor days.")
+    
+    logging.info(report)
+
+    
+    return initial_date, end_date, construction_duration
+
+
 
 def get_external_predecessor_notation(project_name, task_label, lag):
     """
@@ -351,6 +414,7 @@ def project_to_df(project):
     # Create a DataFrame to store the project tasks
     data = {
         "Task Label": [task.label for task in project.tasks],
+        "Section": [task.section for task in project.tasks],
         "Task Name": [task.name for task in project.tasks],
         "Duration": [task.duration for task in project.tasks],
         "Start Date": [task.start_date for task in project.tasks],
@@ -614,7 +678,10 @@ def display_gantt_chart(project, label=None):
         start_date = task["Start"]
         finish_date = task["Finish"]
         duration = (finish_date - start_date).days
-        ax.barh(idx, duration, left=start_date, color="lightblue")
+        if duration == 0:  # Milestone task
+            ax.plot(start_date, idx, 'dk', markersize=5) 
+        else:
+            ax.barh(idx, duration, left=start_date, color="lightblue")
 
     # Set y-axis ticks and labels
     y_labels = [task["Task"] for task in tasks_data]
@@ -644,6 +711,8 @@ def display_gantt_chart(project, label=None):
     # Show the plot
     plt.tight_layout()
     plt.show(block=False)
+
+
 
 
 

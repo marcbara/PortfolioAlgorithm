@@ -97,8 +97,9 @@ class Task:
         project (Project): The project to which this task belongs.
         start_date (str): Absolute start calendar date
         finish_date (str): Absolute finish calendar date
+        section (str): The section of the project to which this task belongs.
     """
-    def __init__(self, id, label, name, duration, predecessors, external_predecessors, successors, resources, project=None):
+    def __init__(self, id, label, name, duration, predecessors, external_predecessors, successors, resources, project=None, section=None):
         self.id = id
         self.label = label
         self.name = name
@@ -112,18 +113,20 @@ class Task:
         self.project = project
         self.start_date = None
         self.finish_date = None
+        self.section = section
 
     def __repr__(self):
         predecessor_labels = ", ".join(str(label) for label in self.predecessors.keys())
         external_predecessor_labels = ", ".join(str(label) for label in self.external_predecessors.keys())
         successors_labels = ", ".join(str(label) for label in self.successors.keys())
-        return (f"Task(ID: {self.id}, Label: {self.label}, "#Name: {self.name}, "
+        return (f"Task(ID: {self.id}, Label: {self.label}, Name: {self.name}, "
                 f"Duration: {self.duration}, Start time: {self.start_time}, "
                 f"End time: {self.finish_time}, Project: {self.project.instanceName if self.project else 'None'}, "
                 f"Start date: {self.start_date}, Finish date: {self.finish_date}, "
                 f"Predecessors IDs: [{predecessor_labels}], "
                 f"External Predecessors IDs: [{external_predecessor_labels}], "
-                f"Successors IDs: [{successors_labels}])\n")
+                f"Successors IDs: [{successors_labels}], "
+                f"Section: {self.section})\n")
 
 
 class Resource:
@@ -168,7 +171,7 @@ class Solution:
     def to_project(self, original_project):
         # Generate tasks from the solution's tasks
         solved_tasks = [Task(task.id, task.label, task.name, task.duration, task.predecessors, task.external_predecessors,
-                             task.successors, task.resources, task.project) 
+                             task.successors, task.resources, task.project, task.section) 
                         for task in self.tasks]
         
         # Set start and finish times based on the solution
