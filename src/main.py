@@ -121,7 +121,7 @@ def main_jointprojects():
         set_project_task_dates(project, portfolio.start_date)
 
     # Convert each decomposed project to a dataframe and add to the lists
-    logging.info("\nReport of Constrained projects:")
+    logging.info("\nReport of Projects when the availability of resources is a constraint:")
     for project in decomposed_projects_constrained:
         df_constrained = project_to_df(project)
         dfs.append(df_constrained)
@@ -131,7 +131,7 @@ def main_jointprojects():
         #display_gantt_chart(project, "Constrained Resources")
 
     
-    logging.info("\nReport of Not Constrained projects:")
+    logging.info("\nReport of Projects not constrained by resources (as if resources were not limiting):")
     for project in decomposed_projects_notconstrained:
         df_not_constrained = project_to_df(project)
         dfs.append(df_not_constrained)

@@ -19,7 +19,7 @@ Delays in tasks due to collision of resources:
 - Task '13' from project 'P3' has been delayed by 75 days due to insufficient availability of resource 'R10'.
 - Task '53' from project 'P1' has been delayed by 284 days due to insufficient availability of resource 'R9'.
 
-Report of Constrained projects:
+Report of Projects when the availability of resources is a constraint:
 - Project 'P1' was delivered late by 109 labor days, on 03-06-2026. The deadline was 01-01-2026. The total penalty is 54.5 k$.
 - Project 'P1' Construction phase: Initial date: 22-05-2024, End date: 27-05-2026. Duration: 525 labor days.
 - Project 'P2' was delivered late by 104 labor days, on 27-05-2026. The deadline was 01-01-2026. The total penalty is 72.8 k$.
@@ -27,7 +27,7 @@ Report of Constrained projects:
 - Project 'P3' was delivered late by 351 labor days, on 08-05-2028. The deadline was 01-01-2027. The total penalty is 315.9 k$.
 - Project 'P3' Construction phase: Initial date: 20-05-2025, End date: 25-02-2028. Duration: 723 labor days.
 
-Report of Not Constrained projects:
+Report of Projects not constrained by resources (as if resources were not limiting):
 - Project 'P1' was delivered on time on 12-08-2024. There is no penalty.
 - Project 'P1' Construction phase: Initial date: 04-01-2024, End date: 05-08-2024. Duration: 152 labor days.
 - Project 'P2' was delivered on time on 12-12-2025. There is no penalty.
