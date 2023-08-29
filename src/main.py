@@ -2,6 +2,7 @@ from utils import read_projects, read_inputs
 from utils import TORA_Heuristic, network_diagram, set_project_task_dates
 from utils import combine_projects, decompose_project
 from utils import display_gantt_chart, project_to_df, write_solutions_to_excel, log_project_penalty, adjust_external_predecessors_and_successors
+from utils import check_task_consistency
 import copy
 import logging
 import matplotlib.pyplot as plt
@@ -29,18 +30,23 @@ def main_independentprojects():
     for project in portfolio.projects:
         # Read inputs (tasks and resources) for one project
         original_project = read_inputs(project)
+        try:
+            check_task_consistency(original_project)
+        except ValueError as e:
+            print("Error:", e)
+            exit(1)
         
-        # # Make a deep copy for TORA
-        # project_for_tora = copy.deepcopy(original_project)
+        # Make a deep copy for TORA
+        project_for_tora = copy.deepcopy(original_project)
 
-        # # Calculate solution for the given scenario
-        # solution_constrained = TORA_Heuristic(project_for_tora)
-        # solved_constrained_project = solution_constrained.to_project(project_for_tora)
-        # set_project_task_dates(solved_constrained_project, portfolio.start_date)
+        # Calculate solution for the given scenario
+        solution_constrained = TORA_Heuristic(project_for_tora)
+        solved_constrained_project = solution_constrained.to_project(project_for_tora)
+        set_project_task_dates(solved_constrained_project, portfolio.start_date)
 
-        # df_constrained = project_to_df(solved_constrained_project)
-        # dfs.append(df_constrained)
-        # sheet_names.append(project.instanceName + "_Constrained")
+        df_constrained = project_to_df(solved_constrained_project)
+        dfs.append(df_constrained)
+        sheet_names.append(project.instanceName + "_Constrained")
 
         # Make another deep copy for the network diagram
         project_for_nd = copy.deepcopy(original_project)
@@ -76,6 +82,11 @@ def main_joinprojects():
     # Read inputs (tasks and resources) for each project in the portfolio
     for project in portfolio.projects:
         read_inputs(project)
+        try:
+            check_task_consistency(project)
+        except ValueError as e:
+            print("Error:", e)
+            exit(1)
 
     # Combine all projects into one
     combined_project = combine_projects(portfolio)

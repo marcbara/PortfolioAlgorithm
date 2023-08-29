@@ -648,6 +648,24 @@ def display_gantt_chart(project, label=None):
 
 
 def adjust_external_predecessors_and_successors(tasks):
+    """
+    Adjust the external predecessors for a list of tasks.
+    
+    For each task in the provided list, this function checks its external predecessors
+    and adjusts its 'predecessors' attribute to include the identified tasks. It also
+    ensures that each identified predecessor task lists the current task as a successor.
+    
+    The function assumes that external predecessors are represented in the format 
+    "project_name-label". The function uses this format to identify the corresponding
+    task ID and make the necessary adjustments.
+    
+    Args:
+        tasks (list): A list of Task objects. Each Task object should have 'external_predecessors',
+                      'predecessors', and 'successors' attributes.
+    
+    Returns:
+        None. The function modifies the 'predecessors' and 'successors' attributes of the provided tasks in-place.
+    """
     # Create a mapping from project-label to task ID
     project_label_to_id = {(task.project.instanceName, task.label): task.id for task in tasks}
     
@@ -663,3 +681,30 @@ def adjust_external_predecessors_and_successors(tasks):
                 # Add the current task as a successor to the corresponding predecessor task
                 pred_task = tasks[corresponding_task_id]
                 pred_task.successors[task.id] = lag
+
+
+
+def check_task_consistency(project):
+    """
+    Check the consistency of predecessors and successors declarations in a project's tasks.
+    
+    Args:
+        project (Project): The project instance with tasks to be checked.
+        
+    Raises:
+        ValueError: If there's an inconsistency between the predecessors and successors.
+    """
+    for task in project.tasks:
+        for successor_id in task.successors:
+            successor_task = project.tasks[successor_id]
+            if task.id not in successor_task.predecessors:
+                raise ValueError(f"Inconsistency detected in {project.instanceName}: Task {task.label} lists Task {successor_task.label} as its successor, but Task {successor_task.label} does not list Task {task.label} as its predecessor.")
+        for predecessor_id in task.predecessors:
+            predecessor_task = project.tasks[predecessor_id]
+            if task.id not in predecessor_task.successors:
+                raise ValueError(f"Inconsistency detected in {project.instanceName}: Task {task.label} lists Task {predecessor_task.label} as its predecessor, but Task {predecessor_task.label} does not list Task {task.label} as its successor.")
+                
+    print(f"No inconsistencies detected in task predecessors and successors for {project.instanceName}.")
+
+
+
