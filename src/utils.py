@@ -669,7 +669,7 @@ def network_diagram(project):
     return solution
 
 
-def display_gantt_chart(project, label=None):
+def display_gantt_chart(project, label=None, save_to_file=True):
 
     # Prepare data for the Gantt chart
     tasks_data = [{
@@ -725,9 +725,26 @@ def display_gantt_chart(project, label=None):
 
     # Show the plot
     plt.tight_layout()
-    plt.show(block=False)
 
-
+    # Save the plot to a file
+    if save_to_file:
+        # Construct filename using project's instanceName and label (if provided)
+        base_name = project.instanceName
+        if label:
+            base_name += f" {label}"  # Add a space before the label
+        filename = "".join([c for c in base_name if c.isalpha() or c.isdigit() or c == ' ' or c == '_']).rstrip() + ".png"
+        
+        # Ensure the /png subfolder exists
+        png_folder = os.path.join(OUTPUTS_DIR, 'png')
+        os.makedirs(png_folder, exist_ok=True)  # This will create the folder if it doesn't exist
+        
+        filepath = os.path.join(png_folder, filename)
+        plt.savefig(filepath, dpi=300)
+        print(f"Gantt chart saved to: {filepath}")
+        plt.close(fig)  # Close the figure after saving
+    else:
+        # Show the plot on screen if not saving to file
+        plt.show(block=False)
 
 
 

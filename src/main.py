@@ -131,7 +131,7 @@ def main_jointprojects():
         log_construction_duration_and_water_consumption(project)
         sheet_names.append(project.instanceName + "_Constrained")
         if generate_gantts:
-            display_gantt_chart(project, "Constrained Resources")
+            display_gantt_chart(project, "Constrained Resources", save_to_file=True)
 
     
     logging.info("\nReport of Projects not constrained by resources (as if resources were not limiting):")
@@ -142,7 +142,7 @@ def main_jointprojects():
         log_construction_duration_and_water_consumption(project)
         sheet_names.append(project.instanceName + "_notConstrained")
         if generate_gantts:
-            display_gantt_chart(project, "Not-Constrained Resources")
+            display_gantt_chart(project, "Not-Constrained Resources", save_to_file=True)
 
     # Write all dataframes to a single Excel file with different sheets
     write_solutions_to_excel(dfs, sheet_names)
