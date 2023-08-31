@@ -2,8 +2,9 @@ from utils import read_projects, read_inputs
 from utils import TORA_Heuristic, network_diagram, set_project_task_dates
 from utils import combine_projects, decompose_project
 from utils import display_gantt_chart, project_to_df, write_solutions_to_excel, log_project_penalty, adjust_external_predecessors_and_successors
-from utils import check_task_consistency, log_construction_duration
+from utils import check_task_consistency, log_construction_duration_and_water_consumption
 from utils import report_with_chatgpt, log_filename, AI_insights_filename, read_secret_files
+from utils import generate_ai_insights, generate_gantts
 import copy
 import logging
 import matplotlib.pyplot as plt
@@ -104,7 +105,7 @@ def main_jointprojects():
     adjust_external_predecessors_and_successors(project_for_tora.tasks)
     solution_constrained = TORA_Heuristic(project_for_tora)
     solved_constrained_project = solution_constrained.to_project(project_for_tora)
- 
+
     # Decompose the TORA-processed combined project and set dates
     decomposed_projects_constrained = decompose_project(solved_constrained_project, portfolio.projects)
     for project in decomposed_projects_constrained:
@@ -127,9 +128,10 @@ def main_jointprojects():
         df_constrained = project_to_df(project)
         dfs.append(df_constrained)
         log_project_penalty(project)
-        log_construction_duration(project)
+        log_construction_duration_and_water_consumption(project)
         sheet_names.append(project.instanceName + "_Constrained")
-        display_gantt_chart(project, "Constrained Resources")
+        if generate_gantts:
+            display_gantt_chart(project, "Constrained Resources")
 
     
     logging.info("\nReport of Projects not constrained by resources (as if resources were not limiting):")
@@ -137,15 +139,16 @@ def main_jointprojects():
         df_not_constrained = project_to_df(project)
         dfs.append(df_not_constrained)
         log_project_penalty(project)
-        log_construction_duration(project)
+        log_construction_duration_and_water_consumption(project)
         sheet_names.append(project.instanceName + "_notConstrained")
-        display_gantt_chart(project, "Not-Constrained Resources")
+        if generate_gantts:
+            display_gantt_chart(project, "Not-Constrained Resources")
 
     # Write all dataframes to a single Excel file with different sheets
     write_solutions_to_excel(dfs, sheet_names)
 
     # Report with ChatGPT
-    if read_secret_files:
+    if read_secret_files and generate_ai_insights:
         report_with_chatgpt(log_filename, AI_insights_filename)
 
     # Block Gantt Charts until user closes them

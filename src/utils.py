@@ -39,6 +39,10 @@ INPUTS_DIR = os.path.join(current_directory, config['PATHS']['INPUTS_DIR'])
 RESOURCES_SHEET_NAME = "Resources"
 PORTFOLIO_FILE = config['PATHS']['PORTFOLIO_FILE']
 
+# Settings
+generate_gantts = config.getboolean('SETTINGS', 'GenerateGantt', fallback=False)
+generate_ai_insights = config.getboolean('SETTINGS', 'GenerateAIInsights', fallback=False)
+
 # Set up logging
 portfolio_file_basename = os.path.basename(PORTFOLIO_FILE)
 portfolio_name, _ = os.path.splitext(portfolio_file_basename)
@@ -137,21 +141,21 @@ def read_projects():
     Returns:
         Portfolio: The created portfolio containing projects and their associated information.
     """
-    project_data = {}
-    for project_name, project_values in config['PROJECTS'].items():
-        start_date, deadline, daily_penalty = project_values.split(',')
-        project_data[project_name] = datetime.strptime(start_date, "%d-%m-%Y")
-
-    # Find the earliest start date
-    earliest_start = min(project_data.values())
-
     projects_list = []
-    for project_name, start_date in project_data.items():
-        _, deadline, daily_penalty = config['PROJECTS'][project_name].split(',')
+    earliest_start = None
+
+    for project_name, project_values in config['PROJECTS'].items():
+        start_date_str, deadline, daily_penalty, daily_water_consumption = project_values.split(',')
+        start_date = datetime.strptime(start_date_str, "%d-%m-%Y")
+        
+        # Update the earliest start date
+        if earliest_start is None or start_date < earliest_start:
+            earliest_start = start_date
+        
         start_offset = get_labor_days_difference(earliest_start, start_date)
-        project = Project(project_name, start_date.strftime("%d-%m-%Y"), deadline, float(daily_penalty), start_offset)
+        project = Project(project_name, start_date_str, deadline, float(daily_penalty), start_offset, float(daily_water_consumption))
         projects_list.append(project)
-    
+
     # Create the Portfolio object
     portfolio_start_date = earliest_start.strftime("%d-%m-%Y")
     portfolio = Portfolio(portfolio_start_date)
@@ -159,6 +163,7 @@ def read_projects():
         portfolio.add_project(project)
 
     return portfolio
+
 
 
 def read_inputs(project):
@@ -322,7 +327,8 @@ def decompose_project(combined_project, original_projects):
             instanceName=project.instanceName,
             startDate=project.startDate,
             deadline=project.deadline,
-            dailyPenalty=project.dailyPenalty
+            dailyPenalty=project.dailyPenalty,
+            dailyWaterConsumption=project.dailyWaterConsumption
         )
         decomposed_project.tasks = decomposed_tasks[project.instanceName]
         decomposed_project.resources = project.resources  # Reuse the original resources
@@ -351,7 +357,7 @@ def log_project_penalty(project):
     logging.info(report)
 
 
-def log_construction_duration(project):
+def log_construction_duration_and_water_consumption(project):
     """
     Log the initial date, end date, and duration in labor days for the "Construction" section of a project.
     
@@ -361,31 +367,31 @@ def log_construction_duration(project):
     Returns:
         tuple: A tuple containing the initial date, end date, and duration in labor days for the "Construction" section.
     """
-    
+
     # Filter tasks that belong to the "Construction" section
     construction_tasks = [task for task in project.tasks if task.section == "Construction"]
     
     # If there are no construction tasks, return an appropriate message
     if not construction_tasks:
-        logging.info("No tasks found for the 'Construction' section in the project.")
+        logging.info(f"- Project '{project.instanceName}': No tasks found for the 'Construction' section in the project.")
         return None, None, 0
     
     # Find the earliest start date and the latest finish date among the construction tasks
     initial_date = min([datetime.strptime(task.start_date, "%d-%m-%Y") for task in construction_tasks])
     end_date = max([datetime.strptime(task.finish_date, "%d-%m-%Y") for task in construction_tasks])
     
-    # Calculate the construction duration in labor days
+    # Calculate the construction duration in labor days and associated water consumption
     construction_duration = get_labor_days_difference(initial_date, end_date)
-    
+    water_consumption = construction_duration * project.dailyWaterConsumption
+
     # Log the results
     report = (f"- Project '{project.instanceName}' Construction phase: "
-        f"Initial date: {initial_date.strftime('%d-%m-%Y')}, End date: {end_date.strftime('%d-%m-%Y')}. Duration: {construction_duration} labor days.")
+        f"Initial date: {initial_date.strftime('%d-%m-%Y')}, End date: {end_date.strftime('%d-%m-%Y')}. Duration: {construction_duration} labor days. "
+        f"The total water consumption in that phase has been {water_consumption:,.0f} m3.")
     
     logging.info(report)
-
     
     return initial_date, end_date, construction_duration
-
 
 
 def get_external_predecessor_notation(project_name, task_label, lag):
@@ -537,7 +543,7 @@ def TORA_Heuristic(project):
     Returns:
         Solution: The solution generated by the TORA heuristic.
     """
-    logging.info("\nDelays in tasks due to collision of resources:")
+    logging.info("Delays in tasks due to collision of resources:")
     
     # Initialize resources availability
     resources_availability = {resource.id: resource.units for resource in project.resources}

@@ -1,5 +1,6 @@
 from datetime import datetime
 
+
 class Portfolio:
     """
     Represents a collection of project instances.
@@ -38,7 +39,7 @@ class Project:
         tasks (list): List of tasks associated with the project.
         resources (list): List of resources available for the project.
     """
-    def __init__(self, instanceName, startDate, deadline, dailyPenalty, start_offset=0):
+    def __init__(self, instanceName, startDate, deadline, dailyPenalty, start_offset=0, dailyWaterConsumption=0):
         self.instanceName = instanceName
         self.startDate = startDate
         self.deadline = deadline
@@ -46,6 +47,7 @@ class Project:
         self.start_offset = start_offset
         self.tasks = []
         self.resources = []
+        self.dailyWaterConsumption = dailyWaterConsumption
         
     def get_delivery_date(self):
         """Compute the delivery date of the project based on the finish dates of its tasks."""
@@ -76,7 +78,8 @@ class Project:
     def __repr__(self):
         return (f"Project({self.instanceName!r}, Start: {self.startDate}, "
                 f"Deadline: {self.deadline}, Daily Penalty: {self.dailyPenalty}, "
-                f"Start Offset: {self.start_offset} labor days)\n")
+                f"Start Offset: {self.start_offset} labor days, "
+                f"Daily Water Consumption: {self.dailyWaterConsumption} m3\n")
 
 
 class Task:
@@ -182,7 +185,7 @@ class Solution:
         # Create a new project instance with the same attributes as the original
         solved_project = Project(original_project.instanceName, original_project.startDate, 
                                  original_project.deadline, original_project.dailyPenalty, 
-                                 original_project.start_offset)
+                                 original_project.start_offset, original_project.dailyWaterConsumption)
         
         # Assign the new list of tasks to the project
         solved_project.tasks = solved_tasks
