@@ -69,7 +69,7 @@ def main_jointprojects():
     The function `main_joinprojects()` reads input projects from a file, combines them, processes them with
     TORA (Task Ordering and Resource Allocation), Network Diagram algorithm and generates decomposed
     output projects using specialized functions. It then converts the decomposed projects into dataframes,
-    logs possible penalties, displays Gantt charts of the resources and saves the dataframes in an excel
+    logs possible penalties and water consumption, displays Gantt charts of the resources and saves the dataframes in an excel
     file with different sheets.
 
     Parameters: None
