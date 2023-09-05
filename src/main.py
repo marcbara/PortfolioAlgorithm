@@ -1,10 +1,10 @@
 from utils import read_projects, read_inputs 
-from utils import TORA_Heuristic, network_diagram, set_project_task_dates
-from utils import combine_projects, decompose_project
+from utils import combine_projects, decompose_project, set_project_task_dates
 from utils import display_gantt_chart, project_to_df, write_solutions_to_excel, log_project_penalty, adjust_external_predecessors_and_successors
 from utils import check_task_consistency, log_construction_duration_and_water_consumption
 from utils import report_with_chatgpt, log_filename, AI_insights_filename, read_secret_files
 from utils import generate_ai_insights, generate_gantts
+from core import TORA_Heuristic, network_diagram
 import copy
 import logging
 import matplotlib.pyplot as plt
